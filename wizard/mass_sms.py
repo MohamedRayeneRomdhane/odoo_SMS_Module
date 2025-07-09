@@ -24,7 +24,8 @@ class part_sms(models.TransientModel):
         self.priority = gateway.priority
         self.coding = gateway.coding
         self.tag = gateway.tag
-        self.nostop = gateway.nostop
+        # Convert boolean to string for selection field
+        self.nostop = '1' if gateway.nostop else '0'
 
     def _merge_message(self, message, object, partner):
         def merge(match):
