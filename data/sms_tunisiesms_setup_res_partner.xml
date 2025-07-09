@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding='UTF-8'?>
+<odoo>
+  <data>
+     <function  model="sms.tunisiesms.setup" name="update_table_res_partner_from_zero_to_4"/>
+  </data>
+</odoo>

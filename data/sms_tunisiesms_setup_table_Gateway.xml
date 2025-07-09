@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding='UTF-8'?>
+<odoo>
+  <data>
+       <function  model="sms.tunisiesms.setup" name="create_table_sms_tunisiesms_setup"/>
+  </data>
+</odoo>

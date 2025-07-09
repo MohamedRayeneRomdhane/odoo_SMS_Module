@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <act_window name="TunisieSMS-Mass"
+            res_model="part.tunisiesms" 
+            binding_model="res.partner"
+            view_mode="form"
+            target="new"
+            binding_views="form"
+            id="action_part_tunisiesms" />
+    </data>
+</odoo>

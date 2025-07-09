@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+<openerp>
+    <data>
+
+        <menuitem name="Tunisie SMS" id="menu_tunisiesms_administration_server" parent="base.menu_administration"/>
+
+      
+        <record model="ir.ui.view" id="sms_tunisiesms_form">
+            <field name="name">sms.tunisiesms.form</field>
+            <field name="model">sms.tunisiesms</field>
+            <field name="priority" eval="8"/>
+            <field name="arch" type="xml">
+                <form string="SMS Gateway" >
+                    <sheet>
+                        <group>
+
+                        <field name="name" select="1" colspan="4" invisible="1"/>
+                        <field name="method" select="1" colspan="4" invisible="1"/>
+                        </group>
+                        <notebook colspan="4">
+                            <page string="General">
+                                <group>
+                                    <group>
+                                        <field name="url" colspan="4" invisible="1"/>
+                                        <field name="sender_url_params" string="Sender" />
+                                        <field name="key_url_params"  string="Key" colspan="4"/>
+                                    </group>
+                                   
+                                    <field name="state" invisible="1"/>
+                                </group>
+                            </page>
+                            <page string="Permission">
+                                <separator string="Access Permission"
+                                    colspan="4" />
+                                <field name="users_id" select="1"
+                                    colspan="4" nolabel="1" />
+                            </page>
+                           
+                            <page string="SMS Template">
+                                <group>	
+                                <field name="label_order" colspan="2"/>
+
+                                <field name="status_order_draft"/>  
+                                <field name="order_draft_sms" colspan="2"/> 
+
+                                <field name="status_order_sent"/>  
+                                <field name="order_sent_sms" colspan="2"/> 
+
+                                <field name="status_order_waiting"/>  
+                                <field name="order_waiting_sms" colspan="2"/> 
+
+                                <field name="status_order_sale"/>  
+                                <field name="order_sale_sms" colspan="2"/> 
+
+                                <field name="status_order_done"/>  
+                                <field name="order_done_sms" colspan="2"/> 
+
+                                <field name="status_order_cancel"/>  
+                                <field name="order_cancel_sms" colspan="2"/>
+
+                                <field name="status_res_partner_create"/>
+                                <field name="res_partner_sms_create" colspan="2"/>
+                                	
+                                </group>
+                            </page>
+                            <page string="Code Status">
+                                <field name="code_error_status" colspan="4" nolabel="1">
+                                        <tree >
+                                            <field name="code" readonly="1" colspan="1"/>
+                                            <field name="libelle"/>
+                                        </tree>
+                                        <form >
+                                            <sheet>
+                                                <group>
+                                                   <field name="code"/>
+                                                    <field name="libelle"/>
+                                                </group>
+                                            </sheet>
+                                        </form>
+                                    </field>
+                            </page>
+                        </notebook>
+                        <footer>
+                            <button name="update_sms_client" string="Save" type="object" class="oe_highlight"/>
+                            or
+                            <button special="cancel" string="Cancel" class="oe_link"/>
+                        </footer>
+                    </sheet>
+               
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_sms_tunisiesms_gateway">
+            <field name="name">SMS Gateway</field>
+            <field name="res_model">sms.tunisiesms</field>
+            <field name="target">inline</field>
+            <field name="res_id">1</field> 
+            <field name="view_id" ref="sms_tunisiesms_form" />
+        </record>
+
+        <menuitem name="Gateway" id="menu_tunisiesms_administration_sms_server" parent="menu_tunisiesms_administration_server" action="action_sms_tunisiesms_gateway"/>
+
+      
+        <record model="ir.ui.view" id="sms_tunisiesms_history_tree">
+            <field name="name">sms.tunisiesms.history.tree</field>
+            <field name="model">sms.tunisiesms.history</field>
+            <field name="arch" type="xml">
+                <tree string="Gateway History" create="false" default_order="date_create desc">
+                    <field name="date_create"/>
+                    <field name="name"/>
+                    <field name="gateway_id"/>
+                    <field name="to"/>
+                    <field name="sms"/>
+                    <field name="message_id"/>
+                    <field name="status_code"/>
+                    <field name="dlr_msg"/>
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="sms_tunisiesms_history_form">
+            <field name="name">sms.tunisiesms.history.form</field>
+            <field name="model">sms.tunisiesms.history</field>
+            <field name="arch" type="xml">
+                <form string="Gateway History">
+                    <sheet>
+                    <group cols="4">
+                        <field name="gateway_id" />
+                        <field name="date_create" />
+                        <field name="name" />
+                        <field name="to" />
+                        <field name="sms"  />
+                        <field name="message_id"/>
+                        <field name="status_code"/>
+                        <field name="dlr_msg"/>
+                    </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_sms_tunisiesms_history_tree">
+            <field name="name">TunisieSMS History</field>
+            <field name="res_model">sms.tunisiesms.history</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="sms_tunisiesms_history_tree" />
+        </record>
+
+        <menuitem name="TunisieSMS History" id="menu_tunisiesms_administration_sms_server_history" parent="menu_tunisiesms_administration_server" action="action_sms_tunisiesms_history_tree"/>
+
+        <act_window context="{'gateway_id': active_id}" domain="[('gateway_id', '=', active_id)]" id="act_sms_gateway_2_sms_history" name="SMS History" res_model="sms.tunisiesms.history" binding_model="sms.tunisiesms"/>
+
+        <record model="ir.ui.view" id="sms_tunisiesms_message_queue_tree">
+            <field name="name">sms.tunisiesms.queue.tree</field>
+            <field name="model">sms.tunisiesms.queue</field>
+            <field name="arch" type="xml">
+                <tree string="Message Queue" create="false" default_order="date_create desc">
+                    <field name="date_create"/>
+                    <field name="mobile"/>
+                    <field name="msg"/>
+                    <field name="state"/>
+                    <field name="gateway_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="sms_tunisiesms_message_queue_form">
+            <field name="name">sms.tunisiesms.history.form</field>
+            <field name="model">sms.tunisiesms.queue</field>
+            <field name="arch" type="xml">
+                <form string="Gateway History">
+                    <sheet>
+                        <group>
+                            <group>
+                        <field name="date_create" select="1"/>
+                        <field name="gateway_id" select="1"/> 
+                        <field name="mobile" select="1"/>
+                        </group>
+                        <field name="state" select="1"/>
+                        <separator string="SMS Message" colspan="4"/>
+                        <field name="msg" colspan="4" select="2" nolabel="1"/>
+                        <separator string="Last Error"  colspan="4"/>
+                        <field name="error" colspan="4" select="2" nolabel="1"/>
+                    </group>
+                </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_sms_tunisiesms_queue_tree">
+            <field name="name">TunisieSMS Queue</field>
+            <field name="res_model">sms.tunisiesms.queue</field>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="sms_tunisiesms_message_queue_tree" />
+        </record>
+
+        <menuitem name="TunisieSMS Queue" id="menu_tunisiesms_administration_sms_server_queue" parent="menu_tunisiesms_administration_server" action="action_sms_tunisiesms_queue_tree"/>
+
+        <act_window context="{'gateway_id': active_id}" domain="[('gateway_id', '=', active_id)]" id="act_sms_gateway_2_sms_queue" name="Message Queue" res_model="sms.tunisiesms.queue" binding_model="sms.tunisiesms"/>
+
+        <menuitem name="TunisieSMS Mass" id="menu_tunisiesms_administration_sms_mass" parent="menu_tunisiesms_administration_server" action="action_part_tunisiesms"/>
+
+    </data>
+</openerp>
