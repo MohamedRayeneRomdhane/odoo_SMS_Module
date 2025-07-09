@@ -50,6 +50,16 @@ class part_sms(models.TransientModel):
             raise UserError(_('You can only select one partner'))
         for partner in partner_obj.browse(partner_ids):
             self.mobile_to = partner.mobile
+
+            # Log all details before sending
+            print("=== SMS MASS SEND DETAILS ===")
+            print(f"API Gateway URL: {self.gateway.url}")
+            print(f"API Key: {self.gateway.key_url_params}")
+            print(f"Sender: {self.gateway.sender_url_params}")
+            print(f"Phone Number: {self.mobile_to}")
+            print(f"Message: {self.text}")
+            print("=============================")
+
             client_obj.send_msg(self)
         return True
 
