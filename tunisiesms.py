@@ -304,7 +304,7 @@ class SMSQueue(models.Model):
                 ('3', '3')
             ], 'Priority', help='The priority of the message ')
 
-    classes  = fields.Selection([
+    classes1  = fields.Selection([
                 ('0', 'Flash'),
                 ('1', 'Phone display'),
                 ('2', 'SIM'),
@@ -318,9 +318,9 @@ class SMSQueue(models.Model):
             ], 'Coding', help='The sms coding: 1 for 7 bit or 2 for unicode')
     tag = fields.Char('Tag',
             help='An optional tag')
-    nostop=  fields.Boolean('NoStop', help='Do not display STOP clause in the message, this requires that this is not an advertising message')
-        
-  
+    nostop1 = fields.Boolean('NoStop', help='Do not display STOP clause in the message, this requires that this is not an advertising message')
+
+
 class Properties(models.Model):
 
     _name = 'sms.tunisiesms.parms'
