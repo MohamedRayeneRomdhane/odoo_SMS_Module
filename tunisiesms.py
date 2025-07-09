@@ -120,9 +120,9 @@ class TUNISIESMS(models.Model):
             'mobile': data.mobile_to,
             'msg': data.text,
             'validity': data.validity, 
-            'classes': data.classes1,  # changed from classes1
+            'classes': data.classes1, 
             'coding': data.coding,
-            'nostop': data.nostop1,    # changed from nostop1
+            'nostop': data.nostop1,
         }
 
     def send_msg(self, data):
@@ -457,7 +457,7 @@ class partner_sms_send(models.Model):
     validity = fields.Integer('Validity',
             help='the maximum time -in minute(s)- before the message is dropped')
 
-    classes = fields.Selection([  # changed from classes1
+    classes1 = fields.Selection([
                 ('0', 'Flash'),
                 ('1', 'Phone display'),
                 ('2', 'SIM'),
@@ -480,7 +480,7 @@ class partner_sms_send(models.Model):
             ], 'Coding', help='The SMS coding: 1 for 7 bit or 2 for unicode')
 
 
-    nostop = fields.Boolean('NoStop', help='Do not display STOP clause in the message, this requires that this is not an advertising message')  # changed from nostop1
+    nostop1 = fields.Boolean('NoStop', help='Do not display STOP clause in the message, this requires that this is not an advertising message')
     
 
     def sms_send(self):
