@@ -1,0 +1,16 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"access_sms_tunisiesms_global","sms.tunisiesms Global","tunisiesms.model_sms_tunisiesms",,1,1,1,1
+"access_sms_tunisiesms_queue_global","sms.tunisiesms.queue Global","tunisiesms.model_sms_tunisiesms_queue",,1,1,1,1
+"access_sms_tunisiesms_parms_global","sms.tunisiesms.parms Global","tunisiesms.model_sms_tunisiesms_parms",,1,1,1,1
+"access_sms_tunisiesms_history_global","sms.tunisiesms.history Global","tunisiesms.model_sms_tunisiesms_history",,1,1,1,1
+"access_tunisiesms_queue_user","sms.tunisiesms.queue User","tunisiesms.model_sms_tunisiesms_queue","group_sms_user",1,1,1,1
+"access_sms_tunisiesms_history_user","sms.tunisiesms.history User","tunisiesms.model_sms_tunisiesms_history","group_sms_user",1,1,1,1
+"access_tunisiesms_partner_tunisiesms_send_global","access_partner_tunisiesms_send global","tunisiesms.model_partner_tunisiesms_send",,1,1,1,1
+"access_tunisiesms_partner_tunisiesms_mass_send_global","access_partner_tunisiesms_mass_send global","tunisiesms.model_part_tunisiesms",,1,1,1,1
+"access_tunisiesms_sms_sale_order_global","sale.order Global","tunisiesms.model_sale_order",,1,1,1,1
+"access_tunisiesms_code_error_global","sms.tunisiesms.code.error Global","tunisiesms.model_sms_tunisiesms_code_error",,1,1,1,1
+
+
+
+
+
