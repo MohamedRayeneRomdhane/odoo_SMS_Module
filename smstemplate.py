@@ -1,4 +1,3 @@
-
 import time
 import urllib
 
@@ -10,6 +9,7 @@ class email_template(models.Model):
     
     sms_template = fields.Boolean('SMS Template')
     mobile_to = fields.Char('To (Mobile)')
+    gateway_id = fields.Many2one('sms.tunisiesms', 'SMS Gateway')
     gateway_id = fields.Many2one('sms.tunisiesms', 'SMS Gateway')
     
             
