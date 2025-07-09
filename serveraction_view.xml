@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<odoo>
+    <data>
+        <!-- Example server action -->
+        <record id="action_sms_send" model="ir.actions.server">
+            <field name="name">Send SMS</field>
+            <field name="model_id" ref="model_sms_tunisiesms"/>
+            <field name="state">code</field>
+            <field name="code">model.send_msg()</field>
+        </record>
+    </data>
+</odoo>
