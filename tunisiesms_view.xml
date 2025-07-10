@@ -200,9 +200,9 @@
         <act_window context="{'gateway_id': active_id}" domain="[('gateway_id', '=', active_id)]" id="act_sms_gateway_2_sms_queue" name="Message Queue" res_model="sms.tunisiesms.queue" binding_model="sms.tunisiesms"/>
 
         <menuitem name="TunisieSMS Mass" id="menu_tunisiesms_administration_sms_mass" parent="menu_tunisiesms_administration_server" action="action_part_tunisiesms"/>
-
         <!-- Add menu for single SMS -->
         <menuitem name="TunisieSMS Single" id="menu_tunisiesms_administration_sms_single" parent="menu_tunisiesms_administration_server" action="action_part_tunisiesms_single"/>
 
     </data>
+</openerp>
 </openerp>

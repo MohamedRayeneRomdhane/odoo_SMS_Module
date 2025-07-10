@@ -22,7 +22,6 @@
 							<field name="classes1" invisible="1"/>
 							<field name="nostop1" invisible="1"/>
 	                   	</page>
-						<!-- New page for single SMS -->
 						<page string="Send Single SMS">
 							<group>
 								<field name="mobile_to" string="Recipient Mobile"/>

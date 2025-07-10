@@ -89,11 +89,16 @@ class part_sms(models.TransientModel):
         return True
 
     gateway = fields.Many2one('sms.tunisiesms', 'SMS Gateway', default=_default_get_gateway)
-    text  = fields.Text('Text', required=True)
-    mobile_to  = fields.Text('Text')
-    classes1  = fields.Text('Text')
-    nostop1  = fields.Text('Text')
-    validity  = fields.Integer('Validity',
+    text = fields.Text('Text', required=True)
+    mobile_to = fields.Char('Recipient Mobile')
+    classes1 = fields.Selection([
+        ('0', 'Flash'),
+        ('1', 'Phone display'),
+        ('2', 'SIM'),
+        ('3', 'Toolkit'),
+    ], 'Class')
+    nostop1 = fields.Boolean('NoStop')
+    validity = fields.Integer('Validity',
             help='The maximum time -in minute(s)- before the message is dropped')
     classes = fields.Selection([
                 ('0', 'Flash'),
@@ -110,11 +115,11 @@ class part_sms(models.TransientModel):
                 ('2', '2'),
                 ('3', '3')
             ], 'Priority', help='The priority of the message')
-    coding  = fields.Selection([
+    coding = fields.Selection([
                 ('1', '7 bit'),
                 ('2', 'Unicode')
             ], 'Coding', help='The sms coding: 1 for 7 bit or 2 for unicode')
-    tag  = fields.Char('Tag',  help='An optional tag')
+    tag = fields.Char('Tag',  help='An optional tag')
 
     category_id = fields.Many2many('res.partner.category', column1='part_sms_id',
                                     column2='category_id', string='Tags test')

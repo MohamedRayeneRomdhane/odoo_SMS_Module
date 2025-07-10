@@ -119,10 +119,10 @@ class TUNISIESMS(models.Model):
             'state': 'draft',
             'mobile': data.mobile_to,
             'msg': data.text,
-            'validity': data.validity, 
-            'classes1': data.classes1, 
+            'validity': data.validity,
+            'classes': data.classes1,
             'coding': data.coding,
-            'nostop1': data.nostop1,
+            'nostop': True if getattr(data, 'nostop1', False) in (True, '1', 1) else False,
         }
 
     def send_msg(self, data):
@@ -193,6 +193,7 @@ class TUNISIESMS(models.Model):
                 raise UserError(_('SMPP method not implemented.'))
             # Optionally, create a queue entry as before
             queue_obj = self.env['sms.tunisiesms.queue']
+            vals = self._prepare_tunisiesms_queue(data, name)
             vals = self._prepare_tunisiesms_queue(data, name)
             queue_obj.create(vals)
         return True
