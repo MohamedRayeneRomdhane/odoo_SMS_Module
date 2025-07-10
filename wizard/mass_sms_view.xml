@@ -24,7 +24,7 @@
 	                   	</page>
 					</notebook>
 		            <footer>
-		                <button string="Send Mass SMS" name="sms_mass_send" type="object" class="oe_highlight"/>
+		                <button string="Send Mass SMS" name="send_msg" type="object" class="oe_highlight"/>
 		                or
 		                <button string="Cancel" class="oe_link" special="cancel"/>
 		            </footer>
