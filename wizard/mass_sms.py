@@ -47,15 +47,18 @@ class part_sms(models.TransientModel):
         client_obj = self.env['sms.tunisiesms']
         partner_obj = self.env['res.partner']
         if not self.gateway:
-            raise UserError(_('You can only select one partner'))
+            raise UserError(_('You must select a gateway.'))
+        if not partner_ids:
+            raise UserError(_('No partners found for the selected categories.'))
         for partner in partner_obj.browse(partner_ids):
+            if not partner.mobile:
+                continue  # Skip partners without a mobile number
             self.mobile_to = partner.mobile
-
-            # Set classes1 and nostop1 for queue compatibility
             self.classes1 = self.classes
             self.nostop1 = self.nostop
-
-            # Log all details before sending
+            # Optionally, merge message with partner data
+            # message = self._merge_message(self.text, partner, partner)
+            # self.text = message
             print("=== SMS MASS SEND DETAILS ===")
             print(f"API Gateway URL: {self.gateway.url}")
             print(f"API Key: {self.gateway.key_url_params}")
@@ -63,7 +66,6 @@ class part_sms(models.TransientModel):
             print(f"Phone Number: {self.mobile_to}")
             print(f"Message: {self.text}")
             print("=============================")
-
             client_obj.send_msg(self)
         return True
 

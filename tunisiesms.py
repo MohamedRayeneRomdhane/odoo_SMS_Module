@@ -132,23 +132,68 @@ class TUNISIESMS(models.Model):
         print(f"Data from send message  : {data}")
         if gateway:
             if not self._check_permissions():
-
                 raise UserError(_('You have no permission to access %s') % (gateway.name,) )
             url = gateway.url
             name = url
             if gateway.method == 'http':
-                prms = {}
-                prms['mobile'] = data.mobile_to
-                prms['sms'] = data.text
-                prms['fct'] ='sms'
-                prms['sender'] = gateway.sender_url_params
-                prms['key'] = gateway.key_url_params
-
+                prms = {
+                    'mobile': data.mobile_to,
+                    'sms': data.text,
+                    'fct': 'sms',
+                    'sender': gateway.sender_url_params,
+                    'key': gateway.key_url_params
+                }
                 params = urllib.parse.urlencode(prms)
-                name = url + "?" + params
-
+                full_url = url + "?" + params
+                try:
+                    response = requests.get(full_url)
+                    response.raise_for_status()
+                    resp_text = response.text
+                    print(f"SMS API response: {resp_text}")
+                    # Try to parse XML response
+                    try:
+                        root = jxmlease.parse(resp_text)
+                        message_id = root['response']['status']['message_id'].get_cdata()
+                        status_code = root['response']['status']['status_code'].get_cdata()
+                        status_mobile = root['response']['status']['status_mobile'].get_cdata()
+                        status_msg = root['response']['status']['status_msg'].get_cdata()
+                    except Exception as e:
+                        message_id = ''
+                        status_code = 'parse_error'
+                        status_mobile = ''
+                        status_msg = str(e)
+                except Exception as e:
+                    # Log error in history and raise
+                    self.env['sms.tunisiesms.history'].create({
+                        'name': _('SMS Send Error'),
+                        'gateway_id': gateway.id,
+                        'sms': data.text,
+                        'to': data.mobile_to,
+                        'message_id': '',
+                        'status_code': 'error',
+                        'status_mobile': '',
+                        'status_msg': str(e),
+                        'date_create': datetime.now()
+                    })
+                    raise UserError(_('Failed to send SMS: %s') % (e,))
+                # Log success in history
+                self.env['sms.tunisiesms.history'].create({
+                    'name': _('SMS Sent'),
+                    'gateway_id': gateway.id,
+                    'sms': data.text,
+                    'to': data.mobile_to,
+                    'message_id': message_id,
+                    'status_code': status_code,
+                    'status_mobile': status_mobile,
+                    'status_msg': status_msg,
+                    'date_create': datetime.now()
+                })
+            elif gateway.method == 'smpp':
+                # SMPP logic not implemented here
+                raise UserError(_('SMPP method not implemented.'))
+            # Optionally, create a queue entry as before
             queue_obj = self.env['sms.tunisiesms.queue']
-            vals = self._prepare_tunisiesms_queue(data, name )
+            vals = self._prepare_tunisiesms_queue(data, name)
             queue_obj.create(vals)
         return True
 
@@ -710,7 +755,7 @@ class TUNISIESMStSetup(models.Model):
                             {"status":"431", "message":"destination manquante"},
                             {"status":"440", "message":"contenu trop long"},
                             {"status":"441", "message":"destination non autorisée"},
-                            {"status":"442", "message":"sender non autorisée"},
+                            {"status":"442", "message":"sender non autorisé"},
                             {"status":"500", "message":"erreur interne"},
                             {"status":"501", "message":"date non valide"},
                             {"status":"502", "message":"heure non valide"}]
