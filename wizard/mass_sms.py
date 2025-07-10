@@ -38,19 +38,36 @@ class part_sms(models.TransientModel):
         msg = com.sub(merge, message)
         return msg
 
-    def sms_mass_send(self):
-        partner_ids = []
-        for categ in self.category_id:
-            rels = self.env['res.partner'].search([('category_id', '=', categ.id)])
-            partner_ids.extend(rels.ids)
-        partner_ids = list(dict.fromkeys(partner_ids))
-        client_obj = self.env['sms.tunisiesms']
-        partner_obj = self.env['res.partner']
-        if not self.gateway:
-            raise UserError(_('You can only select one partner'))
-        for partner in partner_obj.browse(partner_ids):
-            self.mobile_to = partner.mobile
+    manual_numbers = fields.Text('Manual Phone Numbers', help='Enter one phone number per line to send SMS manually.')
 
+    def sms_mass_send(self):
+        client_obj = self.env['sms.tunisiesms']
+        numbers = []
+
+        # If manual numbers are provided, use them
+        if self.manual_numbers:
+            numbers = [num.strip() for num in self.manual_numbers.splitlines() if num.strip()]
+        else:
+            # Otherwise, collect numbers from selected categories
+            partner_ids = []
+            for categ in self.category_id:
+                rels = self.env['res.partner'].search([('category_id', '=', categ.id)])
+                partner_ids.extend(rels.ids)
+            partner_ids = list(dict.fromkeys(partner_ids))
+            if not partner_ids:
+                raise UserError(_('No partners found in the selected categories.'))
+            partners = self.env['res.partner'].browse(partner_ids)
+            numbers = [p.mobile for p in partners if p.mobile]
+
+        if not self.gateway:
+            raise UserError(_('You must select an SMS Gateway.'))
+        if not numbers:
+            raise UserError(_('No phone numbers to send SMS to.'))
+
+        for number in numbers:
+            self.mobile_to = number
+            # Optionally, merge message if needed
+            # message = self._merge_message(self.text, self, partner)  # if using partner
             # Log all details before sending
             print("=== SMS MASS SEND DETAILS ===")
             print(f"API Gateway URL: {self.gateway.url}")
@@ -59,7 +76,6 @@ class part_sms(models.TransientModel):
             print(f"Phone Number: {self.mobile_to}")
             print(f"Message: {self.text}")
             print("=============================")
-
             client_obj.send_msg(self)
         return True
 
