@@ -22,6 +22,16 @@
 							<field name="classes1" invisible="1"/>
 							<field name="nostop1" invisible="1"/>
 	                   	</page>
+						<!-- New page for single SMS -->
+						<page string="Send Single SMS">
+							<group>
+								<field name="mobile_to" string="Recipient Mobile"/>
+								<field name="text" string="Message"/>
+							</group>
+							<footer>
+								<button string="Send Single SMS" name="send_single_sms" type="object" class="oe_highlight"/>
+							</footer>
+						</page>
 					</notebook>
 		            <footer>
 		                <button string="Send Mass SMS" name="send_msg" type="object" class="oe_highlight"/>

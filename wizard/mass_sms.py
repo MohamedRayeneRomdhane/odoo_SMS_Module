@@ -63,6 +63,25 @@ class part_sms(models.TransientModel):
             client_obj.send_msg(self)
         return True
 
+    def send_single_sms(self):
+        if not self.gateway:
+            raise UserError(_('You must select a gateway.'))
+        if not self.mobile_to:
+            raise UserError(_('You must enter a recipient mobile number.'))
+        if not self.text:
+            raise UserError(_('You must enter a message.'))
+        client_obj = self.env['sms.tunisiesms']
+        # Log all details before sending
+        print("=== SMS SINGLE SEND DETAILS ===")
+        print(f"API Gateway URL: {self.gateway.url}")
+        print(f"API Key: {self.gateway.key_url_params}")
+        print(f"Sender: {self.gateway.sender_url_params}")
+        print(f"Phone Number: {self.mobile_to}")
+        print(f"Message: {self.text}")
+        print("=============================")
+        client_obj.send_msg(self)
+        return True
+
     gateway = fields.Many2one('sms.tunisiesms', 'SMS Gateway', default=_default_get_gateway)
     text  = fields.Text('Text', required=True)
     mobile_to  = fields.Text('Text')

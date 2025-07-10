@@ -8,5 +8,11 @@
             target="new"
             binding_views="form"
             id="action_part_tunisiesms" />
+        <!-- Action for single SMS -->
+        <act_window name="TunisieSMS-Single"
+            res_model="part.tunisiesms"
+            view_mode="form"
+            target="new"
+            id="action_part_tunisiesms_single"/>
     </data>
 </odoo>
