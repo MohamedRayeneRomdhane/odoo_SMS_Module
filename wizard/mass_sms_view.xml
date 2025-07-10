@@ -22,7 +22,6 @@
 							<field name="classes1" invisible="1"/>
 							<field name="nostop1" invisible="1"/>
 	                   	</page>
-						<!-- New page for single SMS -->
 						<page string="Send Single SMS">
 							<group>
 								<field name="mobile_to" string="Recipient Mobile"/>
@@ -34,7 +33,7 @@
 						</page>
 					</notebook>
 		            <footer>
-		                <button string="Send single SMS" name="sms_single_send" type="object" class="oe_highlight"/>
+		                <button string="Send mass SMS" name="sms_mass_send" type="object" class="oe_highlight"/>
 		                or
 		                <button string="Cancel" class="oe_link" special="cancel"/>
 		            </footer>

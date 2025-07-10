@@ -119,10 +119,10 @@ class TUNISIESMS(models.Model):
             'state': 'draft',
             'mobile': data.mobile_to,
             'msg': data.text,
-            'validity': data.validity, 
-            'classes1': data.classes1, 
+            'validity': data.validity,
+            'classes': data.classes1,
             'coding': data.coding,
-            'nostop1': data.nostop1,
+            'nostop': True if getattr(data, 'nostop1', False) in (True, '1', 1) else False,
         }
 
     def send_msg(self, data):
@@ -132,15 +132,14 @@ class TUNISIESMS(models.Model):
         print(f"Data from send message  : {data}")
         if gateway:
             if not self._check_permissions():
-
-                raise UserError(_('You have no permission to access %s') % (gateway.name,) )
+                raise UserError(_('You have no permission to access %s') % (gateway.name,))
             url = gateway.url
             name = url
             if gateway.method == 'http':
                 prms = {}
                 prms['mobile'] = data.mobile_to
                 prms['sms'] = data.text
-                prms['fct'] ='sms'
+                prms['fct'] = 'sms'
                 prms['sender'] = gateway.sender_url_params
                 prms['key'] = gateway.key_url_params
 
@@ -148,7 +147,7 @@ class TUNISIESMS(models.Model):
                 name = url + "?" + params
 
             queue_obj = self.env['sms.tunisiesms.queue']
-            vals = self._prepare_tunisiesms_queue(data, name )
+            vals = self._prepare_tunisiesms_queue(data, name)
             queue_obj.create(vals)
         return True
 
