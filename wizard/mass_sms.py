@@ -51,6 +51,10 @@ class part_sms(models.TransientModel):
         for partner in partner_obj.browse(partner_ids):
             self.mobile_to = partner.mobile
 
+            # Set classes1 and nostop1 for queue compatibility
+            self.classes1 = self.classes
+            self.nostop1 = self.nostop
+
             # Log all details before sending
             print("=== SMS MASS SEND DETAILS ===")
             print(f"API Gateway URL: {self.gateway.url}")

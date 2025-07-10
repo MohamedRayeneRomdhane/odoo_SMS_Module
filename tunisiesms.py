@@ -120,9 +120,9 @@ class TUNISIESMS(models.Model):
             'mobile': data.mobile_to,
             'msg': data.text,
             'validity': data.validity, 
-            'classes': data.classes1, 
+            'classes1': data.classes1, 
             'coding': data.coding,
-            'nostop': data.nostop1,
+            'nostop1': data.nostop1,
         }
 
     def send_msg(self, data):
