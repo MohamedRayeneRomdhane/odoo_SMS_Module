@@ -17,24 +17,6 @@ class MassSMSWizard(models.TransientModel):
         """Get the default SMS gateway."""
         gateway = self.env['sms.tunisiesms'].search([], limit=1)
         return gateway.id if gateway else False
-
-    @api.onchange('gateway')
-    def _onchange_gateway(self):
-        """Update SMS parameters when gateway changes."""
-        if not self.gateway:
-            return
-        
-        gateway = self.gateway
-        self.update({
-            'validity': gateway.validity,
-            'classes': gateway.classes,
-            'deferred': gateway.deferred,
-            'priority': gateway.priority,
-            'coding': gateway.coding,
-            'tag': gateway.tag,
-            'nostop': '1' if gateway.nostop else '0',
-        })
-
     def _merge_message_template(self, message, record, partner):
         """Merge message template with record data."""
         def replace_placeholder(match):
@@ -103,55 +85,16 @@ class MassSMSWizard(models.TransientModel):
             }
         }
 
-    def send_single_sms(self):
-        """Send SMS to a single recipient."""
-        if not self.gateway:
-            raise UserError(_('Please select an SMS gateway'))
-        
-        if not self.mobile_to:
-            raise UserError(_('Please enter a recipient mobile number'))
-        
-        if not self.text:
-            raise UserError(_('Please enter a message'))
-        
-        try:
-            # Create temporary data object
-            sms_data = type('SMSData', (), {
-                'gateway': self.gateway,
-                'mobile_to': self.mobile_to,
-                'text': self.text,
-                'validity': self.validity,
-                'classes1': self.classes1,
-                'coding': self.coding,
-                'nostop1': self.nostop1,
-            })()
-            
-            # Send SMS
-            self.env['sms.tunisiesms'].send_msg(sms_data)
-            
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': _('SMS Sent'),
-                    'message': _('SMS sent successfully to %s') % self.mobile_to,
-                    'type': 'success',
-                }
-            }
-            
-        except Exception as e:
-            raise UserError(_('Failed to send SMS: %s') % str(e))
-
     def _prepare_sms_data(self, partner):
         """Prepare SMS data object for sending."""
         return type('SMSData', (), {
             'gateway': self.gateway,
             'mobile_to': partner.mobile,
             'text': self.text,
-            'validity': self.validity,
-            'classes1': self.classes1,
-            'coding': self.coding,
-            'nostop1': self.nostop1,
+            'validity': self.gateway.validity,
+            'classes1': self.gateway.classes,
+            'coding': self.gateway.coding,
+            'nostop1': self.gateway.nostop,
         })()
 
     # Fields
@@ -166,51 +109,6 @@ class MassSMSWizard(models.TransientModel):
         required=True,
         help='Message content to send'
     )
-    mobile_to = fields.Char(
-        'Recipient Mobile',
-        help='Mobile number for single SMS'
-    )
-    
-    # SMS Parameters
-    classes1 = fields.Selection([
-        ('0', 'Flash'),
-        ('1', 'Phone display'),
-        ('2', 'SIM'),
-        ('3', 'Toolkit'),
-    ], 'SMS Class', help='SMS class determines where message is stored')
-    
-    nostop1 = fields.Boolean(
-        'No Stop Clause',
-        help='Do not display STOP clause for non-advertising messages'
-    )
-    validity = fields.Integer(
-        'Validity (minutes)',
-        help='Maximum time before message is dropped'
-    )
-    classes = fields.Selection([
-        ('0', 'Flash'),
-        ('1', 'Phone display'),
-        ('2', 'SIM'),
-        ('3', 'Toolkit'),
-    ], 'Class', help='SMS class: flash(0), phone display(1), SIM(2), toolkit(3)')
-    
-    deferred = fields.Integer(
-        'Deferred (minutes)',
-        help='Time to wait before sending message'
-    )
-    priority = fields.Selection([
-        ('0', 'Low'),
-        ('1', 'Normal'),
-        ('2', 'High'),
-        ('3', 'Urgent')
-    ], 'Priority', help='Message priority level')
-    
-    coding = fields.Selection([
-        ('1', '7 bit'),
-        ('2', 'Unicode')
-    ], 'Coding', help='SMS encoding: 7 bit or Unicode')
-    
-    tag = fields.Char('Tag', help='Optional message tag')
     
     # Partner Categories
     category_id = fields.Many2many(
@@ -220,11 +118,6 @@ class MassSMSWizard(models.TransientModel):
         string='Partner Categories',
         help='Select partner categories to send SMS to'
     )
-    
-    nostop = fields.Selection([
-        ('0', 'No'),
-        ('1', 'Yes')
-    ], 'No Stop Clause', help='Do not display STOP clause for non-advertising messages')
 
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

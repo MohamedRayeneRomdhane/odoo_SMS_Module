@@ -5,6 +5,7 @@
 "tunisiesms_sms_tunisiesms_history","sms.tunisiesms.history","model_sms_tunisiesms_history",,1,1,1,1
 "tunisiesms_partner_tunisiesms_send","partner.tunisiesms.send","model_partner_tunisiesms_send",,1,1,1,1
 "tunisiesms_part_tunisiesms","part.tunisiesms","model_part_tunisiesms",,1,1,1,1
+"tunisiesms_single_tunisiesms","single.tunisiesms","model_single_tunisiesms",,1,1,1,1
 "tunisiesms_sale_order","sale.order","model_sale_order",,1,1,1,1
 "tunisiesms_sms_tunisiesms_code_error","sms.tunisiesms.code.error","model_sms_tunisiesms_code_error",,1,1,1,1
 

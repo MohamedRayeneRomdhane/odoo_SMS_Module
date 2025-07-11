@@ -5,35 +5,21 @@
             <field name="name">part.tunisiesms.view</field>
             <field name="model">part.tunisiesms</field>
             <field name="arch" type="xml">
-            	<form string="SMS Gateway - Sens SMS" version="7.0">
-	                <group string="Tunisie SMS" colspan="4" invisible="1">
-	        			<field name="gateway"  readonly="1" invisible="1"/>
+       			<form string="Send Mass SMS">
+	                <group string="SMS Gateway Settings" colspan="4">
+	        			<field name="gateway" readonly="1"/>
 					</group>
-					<group string="SMS" colspan="4">
+					<group string="Recipients" colspan="4">
                      	<group>
 		                    <field name="category_id" string="Groups" widget="many2many_tags"
-									       options="{'color_field': 'color', 'no_create_edit': True}" placeholder="Groups..."/>
+									       options="{'color_field': 'color', 'no_create_edit': True}" placeholder="Select recipient groups..."/>
 	   				    </group>
 					</group>
-					<notebook>
-						<page string="Message">
-					    	<field name="text" colspan="4" nolabel="1"/>
-							<field name="mobile_to" invisible="1"/>
-							<field name="classes1" invisible="1"/>
-							<field name="nostop1" invisible="1"/>
-	                   	</page>
-						<page string="Send Single SMS">
-							<group>
-								<field name="mobile_to" string="Recipient Mobile"/>
-								<field name="text" string="Message"/>
-							</group>
-							<footer>
-								<button string="Send Single SMS" name="send_single_sms" type="object" class="oe_highlight"/>
-							</footer>
-						</page>
-					</notebook>
+					<group string="Message" colspan="4">
+				    	<field name="text" colspan="4" nolabel="1" placeholder="Enter your mass SMS message here..."/>
+                   	</group>
 		            <footer>
-		                <button string="Send mass SMS" name="send_mass_sms" type="object" class="oe_highlight"/>
+		                <button string="Send Mass SMS" name="send_mass_sms" type="object" class="oe_highlight"/>
 		                or
 		                <button string="Cancel" class="oe_link" special="cancel"/>
 		            </footer>
@@ -41,7 +27,7 @@
             </field>
         </record>
         
- 		<act_window name="TunisieSMS-Mass"
+ 		<act_window name="Send Mass SMS"
             res_model="part.tunisiesms" 
             binding_model="res.partner"
             view_mode="form"

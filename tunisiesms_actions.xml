@@ -10,7 +10,7 @@
             id="action_part_tunisiesms" />
         <!-- Action for single SMS -->
         <act_window name="TunisieSMS-Single"
-            res_model="part.tunisiesms"
+            res_model="single.tunisiesms"
             view_mode="form"
             target="new"
             id="action_part_tunisiesms_single"/>

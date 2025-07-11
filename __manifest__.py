@@ -17,6 +17,7 @@
         "tunisiesms_view.xml",
         "tunisiesms_data.xml",
         "wizard/mass_sms_view.xml",
+        "wizard/single_sms_view.xml",
         "partner_sms_send_view.xml",
         "smstemplate_view.xml",
         "data/sms_tunisiesms_setup.xml",

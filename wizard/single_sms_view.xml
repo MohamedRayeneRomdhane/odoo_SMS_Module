@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<odoo>
+    <data>
+        <!-- Single SMS Wizard View -->
+        <record model="ir.ui.view" id="view_single_sms_wizard">
+            <field name="name">single.tunisiesms.view</field>
+            <field name="model">single.tunisiesms</field>
+            <field name="arch" type="xml">
+                <form string="Send Single SMS">
+                    <group>
+                        <field name="gateway_id" required="1"/>
+                        <field name="mobile_to" required="1"/>
+                    </group>
+                    <group>
+                        <field name="text" nolabel="1" placeholder="Enter your SMS message here..."/>
+                    </group>
+                    <footer>
+                        <button string="Send SMS" name="send_single_sms" type="object" class="oe_highlight"/>
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Add to partner form context menu -->
+        <act_window name="Send SMS"
+                    res_model="single.tunisiesms" 
+                    binding_model="res.partner"
+                    view_mode="form"
+                    target="new"
+                    id="action_partner_send_single_sms" />
+    </data>
+</odoo>
