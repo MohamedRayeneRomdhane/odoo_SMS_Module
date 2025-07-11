@@ -5,7 +5,7 @@
             <field name="name"> Tunisie SMS Order To Queue Cron </field>
             <field name="model_id" ref="model_sale_order"/>
             <field name="state">code</field>
-            <field name="code">model.GetStateOrderToSend()</field>
+            <field name="code">model.process_order_sms_notifications()</field>
             <field name="user_id" ref="base.user_admin"/>
             <field name='interval_number'>1</field>
             <field name='interval_type'>minutes</field>

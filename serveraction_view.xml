@@ -6,7 +6,12 @@
             <field name="name">Send SMS</field>
             <field name="model_id" ref="model_sms_tunisiesms"/>
             <field name="state">code</field>
-            <field name="code">model.send_msg()</field>
+            <field name="code">
+# This is a placeholder server action
+# Actual SMS sending should be done through the wizard or programmatically
+# with proper data object containing gateway, mobile_to, text, etc.
+pass
+            </field>
         </record>
     </data>
 </odoo>

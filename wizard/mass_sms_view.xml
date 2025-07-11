@@ -33,7 +33,7 @@
 						</page>
 					</notebook>
 		            <footer>
-		                <button string="Send mass SMS" name="sms_mass_send" type="object" class="oe_highlight"/>
+		                <button string="Send mass SMS" name="send_mass_sms" type="object" class="oe_highlight"/>
 		                or
 		                <button string="Cancel" class="oe_link" special="cancel"/>
 		            </footer>
