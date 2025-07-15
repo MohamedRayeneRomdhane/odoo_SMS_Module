@@ -114,28 +114,94 @@ class TunisieSMS(models.Model):
     )
     char_limit = fields.Boolean('Character Limit', default=True)
 
-    # Order Status SMS Templates
-    order_draft_sms = fields.Text('Order Draft SMS Template')
-    status_order_draft = fields.Boolean('Enable Order Draft SMS', default=True)
+    # Order Status SMS Templates & Triggers
+    order_draft_sms = fields.Text(
+        'Draft Order SMS Template',
+        help='Template for SMS sent when order is in draft state. Use %field_name% for variables.'
+    )
+    status_order_draft = fields.Boolean(
+        'Draft Order SMS Trigger', 
+        default=True,
+        help='Enable automatic SMS when order is in draft state'
+    )
     
-    order_sent_sms = fields.Text('Order Sent SMS Template')
-    status_order_sent = fields.Boolean('Enable Order Sent SMS', default=True)
+    order_sent_sms = fields.Text(
+        'Quotation Sent SMS Template',
+        help='Template for SMS sent when quotation is sent to customer'
+    )
+    status_order_sent = fields.Boolean(
+        'Quotation Sent SMS Trigger', 
+        default=True,
+        help='Enable automatic SMS when quotation is sent'
+    )
     
-    order_waiting_sms = fields.Text('Order Waiting SMS Template')
-    status_order_waiting = fields.Boolean('Enable Order Waiting SMS', default=True)
+    order_waiting_sms = fields.Text(
+        'Waiting Approval SMS Template',
+        help='Template for SMS sent when order is waiting for approval'
+    )
+    status_order_waiting = fields.Boolean(
+        'Waiting Approval SMS Trigger', 
+        default=True,
+        help='Enable automatic SMS when order is waiting'
+    )
     
-    order_sale_sms = fields.Text('Order Sale SMS Template')
-    status_order_sale = fields.Boolean('Enable Order Sale SMS', default=True)
+    order_sale_sms = fields.Text(
+        'Order Confirmed SMS Template',
+        help='Template for SMS sent when order is confirmed (sale state)'
+    )
+    status_order_sale = fields.Boolean(
+        'Order Confirmed SMS Trigger', 
+        default=True,
+        help='Enable automatic SMS when order is confirmed'
+    )
     
-    order_done_sms = fields.Text('Order Done SMS Template')
-    status_order_done = fields.Boolean('Enable Order Done SMS', default=True)
+    order_done_sms = fields.Text(
+        'Order Completed SMS Template',
+        help='Template for SMS sent when order is completed/delivered'
+    )
+    status_order_done = fields.Boolean(
+        'Order Completed SMS Trigger', 
+        default=True,
+        help='Enable automatic SMS when order is completed'
+    )
     
-    order_cancel_sms = fields.Text('Order Cancel SMS Template')
-    status_order_cancel = fields.Boolean('Enable Order Cancel SMS', default=True)
+    order_cancel_sms = fields.Text(
+        'Order Cancelled SMS Template',
+        help='Template for SMS sent when order is cancelled'
+    )
+    status_order_cancel = fields.Boolean(
+        'Order Cancelled SMS Trigger', 
+        default=True,
+        help='Enable automatic SMS when order is cancelled'
+    )
     
-    # Partner SMS Templates
-    res_partner_sms_create = fields.Text('New Contact SMS Template')
-    status_res_partner_create = fields.Boolean('Enable New Contact SMS', default=True)
+    # Partner SMS Templates & Triggers
+    res_partner_sms_create = fields.Text(
+        'New Contact Notification Template',
+        help='Template for admin notification when new contact/customer is created'
+    )
+    status_res_partner_create = fields.Boolean(
+        'New Contact SMS Trigger', 
+        default=True,
+        help='Enable admin SMS notification when new contact is created'
+    )
+    
+    # Automatic SMS Trigger Configuration
+    auto_sms_enabled = fields.Boolean(
+        'Enable Automatic SMS System',
+        default=True,
+        help='Master switch: Enable/disable all automatic SMS triggers globally'
+    )
+    auto_sms_on_create = fields.Boolean(
+        'Trigger SMS on Order Creation',
+        default=True,
+        help='Send SMS automatically when new orders are created (draft state)'
+    )
+    auto_sms_on_status_change = fields.Boolean(
+        'Trigger SMS on Status Changes',
+        default=True,
+        help='Send SMS automatically when order status changes between states'
+    )
     
     # URL Parameters
     mobile_url_params = fields.Char('Mobile URL Parameter', default='mobile')
@@ -152,12 +218,23 @@ class TunisieSMS(models.Model):
         readonly=True
     )
     
-    # Notification Labels
-    label_order = fields.Char(
-        'Order Label',
+    # Template Variables Help
+    label_order = fields.Text(
+        'Template Variables Reference',
         required=True,
         readonly=True,
-        default='Please mention these fields in your text: %STATE% %DATE% %NAME%'
+        default='''Common variables you can use in SMS templates:
+• %name% = Order number (e.g., SO001)
+• %partner_id% = Customer name
+• %state% = Order status (draft, sale, done, etc.)
+• %amount_total% = Total order amount
+• %date_order% = Order date
+• %user_id% = Salesperson name
+• %commitment_date% = Delivery date
+• %mobile% = Customer mobile number
+• %email% = Customer email
+
+Usage: Type %variable_name% in your template text'''
     )
 
     def _check_permissions(self):
@@ -846,6 +923,146 @@ class SaleOrderSMS(models.Model):
             template, 'sale_order', order
         )
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to automatically send SMS for new orders."""
+        orders = super(SaleOrderSMS, self).create(vals_list)
+        
+        # Process SMS for new orders
+        for order in orders:
+            try:
+                self._send_automatic_sms(order, is_new_order=True)
+            except Exception as e:
+                _logger.error("Failed to send automatic SMS for new order %s: %s", order.name, str(e))
+        
+        return orders
+
+    def write(self, vals):
+        """Override write to automatically send SMS when order status changes."""
+        # Store old states before update
+        old_states = {order.id: order.state for order in self}
+        
+        # Call parent write method
+        result = super(SaleOrderSMS, self).write(vals)
+        
+        # Check if state changed and send SMS if needed
+        if 'state' in vals:
+            for order in self:
+                old_state = old_states.get(order.id)
+                if old_state != order.state:
+                    try:
+                        self._send_automatic_sms(order, is_new_order=False, old_state=old_state)
+                    except Exception as e:
+                        _logger.error("Failed to send automatic SMS for order state change %s: %s", order.name, str(e))
+        
+        return result
+
+    def _send_automatic_sms(self, order, is_new_order=False, old_state=None):
+        """Send automatic SMS for order creation or status change."""
+        # Get SMS gateway
+        sms_gateway = self.env['sms.tunisiesms'].search([('id', '=', 1)], limit=1)
+        if not sms_gateway:
+            _logger.warning("No SMS gateway configured for automatic SMS")
+            return
+
+        # Check if automatic SMS is enabled globally
+        if not sms_gateway.auto_sms_enabled:
+            _logger.info("Automatic SMS disabled globally, skipping SMS for order %s", order.name)
+            return
+
+        # Check specific automatic SMS settings
+        if is_new_order and not sms_gateway.auto_sms_on_create:
+            _logger.info("Automatic SMS on order creation disabled, skipping SMS for order %s", order.name)
+            return
+        
+        if not is_new_order and not sms_gateway.auto_sms_on_status_change:
+            _logger.info("Automatic SMS on status change disabled, skipping SMS for order %s", order.name)
+            return
+
+        # Check if partner has mobile number
+        partner_mobile = order.partner_id.mobile
+        if not partner_mobile:
+            _logger.info("No mobile number for partner %s, skipping SMS", order.partner_id.name)
+            return
+
+        # Get SMS template and permission based on current order state
+        sms_template, send_permission = self._get_order_sms_config(order.state, sms_gateway)
+        
+        if not send_permission:
+            _logger.info("SMS disabled for order state '%s', skipping SMS for order %s", order.state, order.name)
+            return
+
+        if not sms_template:
+            _logger.info("No SMS template configured for order state '%s', skipping SMS for order %s", order.state, order.name)
+            return
+
+        # Replace template variables
+        final_message = self._replace_order_variables(sms_template, order)
+        
+        if not final_message.strip():
+            _logger.warning("Empty SMS message after template processing for order %s", order.name)
+            return
+
+        # Create SMS data
+        sms_data = self.env['partner.tunisiesms.send'].create({
+            'gateway': sms_gateway.id,
+            'mobile_to': partner_mobile,
+            'text': final_message
+        })
+
+        # Send SMS
+        try:
+            self.env['sms.tunisiesms'].send_msg(sms_data)
+            
+            # Log successful SMS
+            action_type = "New Order" if is_new_order else f"State Change ({old_state} → {order.state})"
+            _logger.info("Automatic SMS sent for %s: Order %s to %s", action_type, order.name, partner_mobile)
+            
+            # Update SMS status tracking
+            current_time = fields.Datetime.now()
+            order.write({
+                'tunisie_sms_status': 1,  # Sent
+                'tunisie_sms_send_date': current_time,
+                'tunisie_sms_write_date': current_time,
+                'tunisie_sms_msisdn': partner_mobile,
+            })
+            
+        except Exception as e:
+            _logger.error("Failed to send automatic SMS for order %s: %s", order.name, str(e))
+            # Update SMS status to error
+            current_time = fields.Datetime.now()
+            order.write({
+                'tunisie_sms_status': 3,  # Error
+                'tunisie_sms_send_date': current_time,
+                'tunisie_sms_write_date': current_time,
+                'tunisie_sms_msisdn': partner_mobile,
+            })
+
+    def action_send_sms_now(self):
+        """Manual action to send SMS for current order state."""
+        for order in self:
+            try:
+                self._send_automatic_sms(order, is_new_order=False, old_state=None)
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': _('SMS Sent'),
+                        'message': _('SMS sent successfully for order %s') % order.name,
+                        'type': 'success',
+                    }
+                }
+            except Exception as e:
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': _('SMS Error'),
+                        'message': _('Failed to send SMS for order %s: %s') % (order.name, str(e)),
+                        'type': 'danger',
+                    }
+                }
+
 
 class ResPartnerSMS(models.Model):
     """Partner SMS integration for automatic SMS notifications."""
@@ -941,6 +1158,90 @@ class ResPartnerSMS(models.Model):
                 'tunisie_sms_write_date': current_time,
             })
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Override create to automatically send SMS for new partners."""
+        partners = super(ResPartnerSMS, self).create(vals_list)
+        
+        # Process SMS for new partners (only for customers, not vendors or companies)
+        for partner in partners:
+            if partner.is_company or partner.supplier_rank > 0:
+                continue  # Skip companies and vendors
+            try:
+                self._send_automatic_partner_sms(partner)
+            except Exception as e:
+                _logger.error("Failed to send automatic SMS for new partner %s: %s", partner.name, str(e))
+        
+        return partners
+
+    def _send_automatic_partner_sms(self, partner):
+        """Send automatic SMS notification for new partner creation."""
+        # Get SMS gateway
+        sms_gateway = self.env['sms.tunisiesms'].search([('id', '=', 1)], limit=1)
+        if not sms_gateway:
+            _logger.warning("No SMS gateway configured for automatic partner SMS")
+            return
+
+        # Check if automatic SMS is enabled globally and for partner creation
+        if not sms_gateway.auto_sms_enabled or not sms_gateway.status_res_partner_create:
+            _logger.info("Automatic partner SMS disabled, skipping SMS for partner %s", partner.name)
+            return
+
+        # Get SMS template
+        sms_template = sms_gateway.res_partner_sms_create
+        if not sms_template:
+            _logger.info("No SMS template configured for partner creation, skipping SMS for partner %s", partner.name)
+            return
+
+        # Get administrator mobile for notifications
+        admin_partner = self.search([('name', '=', 'Administrator')], limit=1)
+        admin_mobile = admin_partner.mobile if admin_partner else None
+        
+        if not admin_mobile:
+            _logger.warning("Administrator mobile not configured, cannot send partner creation SMS")
+            return
+
+        # Replace template variables
+        final_message = self.env['sms.tunisiesms.generic'].replace_with_table_attribute(
+            sms_template, 'res_partner', partner
+        )
+        
+        if not final_message.strip():
+            _logger.warning("Empty SMS message after template processing for partner %s", partner.name)
+            return
+
+        # Create SMS data
+        sms_data = self.env['partner.tunisiesms.send'].create({
+            'gateway': sms_gateway.id,
+            'mobile_to': admin_mobile,
+            'text': final_message
+        })
+
+        # Send SMS
+        try:
+            self.env['sms.tunisiesms'].send_msg(sms_data)
+            
+            # Log successful SMS
+            _logger.info("Automatic SMS sent for new partner: %s to admin %s", partner.name, admin_mobile)
+            
+            # Update SMS status tracking
+            current_time = fields.Datetime.now()
+            partner.write({
+                'tunisie_sms_status': 1,  # Sent
+                'tunisie_sms_send_date': current_time,
+                'tunisie_sms_write_date': current_time,
+            })
+            
+        except Exception as e:
+            _logger.error("Failed to send automatic SMS for partner %s: %s", partner.name, str(e))
+            # Update SMS status to error
+            current_time = fields.Datetime.now()
+            partner.write({
+                'tunisie_sms_status': 3,  # Error
+                'tunisie_sms_send_date': current_time,
+                'tunisie_sms_write_date': current_time,
+            })
+
 class SMSErrorCode(models.Model):
     """SMS Error Code management for tracking API response codes."""
     
@@ -1026,8 +1327,12 @@ class TunisieSMSGeneric(models.Model):
                     field_value = record[column_name]
                     
                     # Convert to string, handling special cases
-                    if field_value is None or field_value is False:
+                    if field_value is None:
                         replacement = ''
+                    elif field_value is False:
+                        replacement = 'No'  # Convert False to human-readable string
+                    elif field_value is True:
+                        replacement = 'Yes'  # Convert True to human-readable string
                     elif hasattr(field_value, 'name'):
                         # Handle Many2one fields
                         replacement = field_value.name
@@ -1037,6 +1342,10 @@ class TunisieSMSGeneric(models.Model):
                     else:
                         replacement = str(field_value)
                     
+                    # Ensure replacement is always a string
+                    if not isinstance(replacement, str):
+                        replacement = str(replacement)
+                        
                     text_to_change = text_to_change.replace(placeholder, replacement)
                     
                 except (KeyError, AttributeError):

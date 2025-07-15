@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <odoo>
     <data>
-        <!-- Example server action -->
+        <!-- SMS Server Actions -->
         <record id="action_sms_send" model="ir.actions.server">
             <field name="name">Send SMS</field>
             <field name="model_id" ref="model_sms_tunisiesms"/>
@@ -11,6 +11,50 @@
 # Actual SMS sending should be done through the wizard or programmatically
 # with proper data object containing gateway, mobile_to, text, etc.
 pass
+            </field>
+        </record>
+
+        <!-- Manual SMS Send for Sale Orders -->
+        <record id="action_sale_order_send_sms_manual" model="ir.actions.server">
+            <field name="name">Send SMS Now</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="binding_model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+for record in records:
+    record.action_send_sms_now()
+            </field>
+        </record>
+
+        <!-- Process Pending SMS Queue -->
+        <record id="action_process_sms_queue" model="ir.actions.server">
+            <field name="name">Process SMS Queue</field>
+            <field name="model_id" ref="model_sms_tunisiesms"/>
+            <field name="state">code</field>
+            <field name="code">
+sms_gateway = env['sms.tunisiesms'].search([('id', '=', 1)], limit=1)
+if sms_gateway:
+    sms_gateway._check_queue()
+            </field>
+        </record>
+
+        <!-- Process Order SMS Notifications -->
+        <record id="action_process_order_sms" model="ir.actions.server">
+            <field name="name">Process Order SMS Notifications</field>
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">
+env['sale.order'].process_order_sms_notifications()
+            </field>
+        </record>
+
+        <!-- Process Partner SMS Notifications -->
+        <record id="action_process_partner_sms" model="ir.actions.server">
+            <field name="name">Process Partner SMS Notifications</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="state">code</field>
+            <field name="code">
+env['res.partner'].process_partner_sms_notifications()
             </field>
         </record>
     </data>

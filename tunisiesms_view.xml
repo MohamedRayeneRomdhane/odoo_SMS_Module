@@ -36,32 +36,118 @@
                                     colspan="4" nolabel="1" />
                             </page>
                            
-                            <page string="SMS Template">
-                                <group>	
-                                <field name="label_order" colspan="2"/>
-
-                                <field name="status_order_draft"/>  
-                                <field name="order_draft_sms" colspan="2"/> 
-
-                                <field name="status_order_sent"/>  
-                                <field name="order_sent_sms" colspan="2"/> 
-
-                                <field name="status_order_waiting"/>  
-                                <field name="order_waiting_sms" colspan="2"/> 
-
-                                <field name="status_order_sale"/>  
-                                <field name="order_sale_sms" colspan="2"/> 
-
-                                <field name="status_order_done"/>  
-                                <field name="order_done_sms" colspan="2"/> 
-
-                                <field name="status_order_cancel"/>  
-                                <field name="order_cancel_sms" colspan="2"/>
-
-                                <field name="status_res_partner_create"/>
-                                <field name="res_partner_sms_create" colspan="2"/>
-                                	
-                                </group>
+                            <page string="SMS Automation">
+                                <sheet>
+                                    <!-- Global Configuration Section -->
+                                    <div class="oe_title">
+                                        <h2>Automatic SMS Configuration</h2>
+                                    </div>
+                                    
+                                    <group>
+                                        <group string="Global Settings">
+                                            <field name="auto_sms_enabled" string="Enable Automatic SMS System"/>
+                                        </group>
+                                    </group>
+                                    
+                                    <!-- Order Status Triggers Section -->
+                                    <div attrs="{'invisible': [('auto_sms_enabled', '=', False)]}">
+                                        <separator string="Order Status Triggers" colspan="4"/>
+                                        <div class="alert alert-info" role="alert">
+                                            <strong>Configuration Instructions:</strong> Enable the checkbox for each order state where you want automatic SMS to be sent. Configure the corresponding message template below each trigger.
+                                        </div>
+                                        
+                                        <!-- Template Variables Reference -->
+                                        <div class="alert alert-warning" role="alert">
+                                            <strong>Available Template Variables:</strong> Use these placeholders in your message templates. They will be automatically replaced with actual values when SMS is sent.
+                                            <br/><br/>
+                                            <div style="font-family: monospace; font-size: 12px; line-height: 1.6;">
+                                                <strong>Order Variables:</strong><br/>
+                                                • <code>%name%</code> = Order number (e.g., SO001)<br/>
+                                                • <code>%amount_total%</code> = Total order amount<br/>
+                                                • <code>%amount_untaxed%</code> = Amount without taxes<br/>
+                                                • <code>%state%</code> = Order status (draft, sent, sale, done, cancel)<br/>
+                                                • <code>%date_order%</code> = Order date<br/>
+                                                • <code>%commitment_date%</code> = Delivery date<br/>
+                                                • <code>%validity_date%</code> = Quotation expiry date<br/>
+                                                • <code>%note%</code> = Order notes/terms<br/>
+                                                <br/>
+                                                <strong>Customer Variables (from partner_id):</strong><br/>
+                                                • <code>%partner_id%</code> = Customer name<br/>
+                                                • <code>%partner_shipping_id%</code> = Delivery address<br/>
+                                                • <code>%partner_invoice_id%</code> = Invoice address<br/>
+                                                <br/>
+                                                <strong>User Variables:</strong><br/>
+                                                • <code>%user_id%</code> = Salesperson name<br/>
+                                                • <code>%team_id%</code> = Sales team<br/>
+                                                • <code>%company_id%</code> = Company name<br/>
+                                                <br/>
+                                                <em>Usage: Type %field_name% in your template text. For related fields, the name will be used automatically.</em>
+                                            </div>
+                                        </div>
+                                        
+                                        <notebook>
+                                            <page string="Order Creation &amp; Quotation">
+                                                <group>
+                                                    <group string="Draft Order Creation">
+                                                        <field name="status_order_draft" string="Enable SMS for Draft Orders"/>
+                                                        <field name="order_draft_sms" string="Message Template" 
+                                                               placeholder="Hello %partner_id%, your order %name% has been created. Total amount: %amount_total%"
+                                                               attrs="{'invisible': [('status_order_draft', '=', False)]}"
+                                                               widget="text"/>
+                                                    </group>
+                                                    
+                                                    <group string="Quotation Sent">
+                                                        <field name="status_order_sent" string="Enable SMS for Sent Quotations"/>
+                                                        <field name="order_sent_sms" string="Message Template"
+                                                               placeholder="Your quotation %name% has been sent. Please review and confirm at your earliest convenience."
+                                                               attrs="{'invisible': [('status_order_sent', '=', False)]}"
+                                                               widget="text"/>
+                                                    </group>
+                                                </group>
+                                            </page>
+                                            
+                                            <page string="Order Processing">
+                                                <group>
+                                                    <group string="Waiting for Approval">
+                                                        <field name="status_order_waiting" string="Enable SMS for Waiting Orders"/>
+                                                        <field name="order_waiting_sms" string="Message Template"
+                                                               placeholder="Order %name% is currently waiting for approval. We will notify you once processed."
+                                                               attrs="{'invisible': [('status_order_waiting', '=', False)]}"
+                                                               widget="text"/>
+                                                    </group>
+                                                    
+                                                    <group string="Sale Order Confirmed">
+                                                        <field name="status_order_sale" string="Enable SMS for Confirmed Orders"/>
+                                                        <field name="order_sale_sms" string="Message Template"
+                                                               placeholder="Order %name% has been confirmed. Total: %amount_total%. Expected delivery: %commitment_date%"
+                                                               attrs="{'invisible': [('status_order_sale', '=', False)]}"
+                                                               widget="text"/>
+                                                    </group>
+                                                </group>
+                                            </page>
+                                            
+                                            <page string="Order Completion">
+                                                <group>
+                                                    <group string="Order Completed">
+                                                        <field name="status_order_done" string="Enable SMS for Completed Orders"/>
+                                                        <field name="order_done_sms" string="Message Template"
+                                                               placeholder="Order %name% has been completed successfully. Thank you for your business, %partner_id%."
+                                                               attrs="{'invisible': [('status_order_done', '=', False)]}"
+                                                               widget="text"/>
+                                                    </group>
+                                                    
+                                                    <group string="Order Cancelled">
+                                                        <field name="status_order_cancel" string="Enable SMS for Cancelled Orders"/>
+                                                        <field name="order_cancel_sms" string="Message Template"
+                                                               placeholder="Order %name% has been cancelled. Please contact us if you need assistance."
+                                                               attrs="{'invisible': [('status_order_cancel', '=', False)]}"
+                                                               widget="text"/>
+                                                    </group>
+                                                </group>
+                                            </page>
+                                        </notebook>
+                                    </div>
+                                </sheet>
                             </page>
                             <page string="Code Status">
                                 <field name="code_error_status" colspan="4" nolabel="1">
