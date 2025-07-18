@@ -17,6 +17,59 @@ except ImportError:
     _logger.warning("SOAPpy not installed. Install it with: pip install SOAPpy")
 
 
+class SMSAccessMixin(models.AbstractModel):
+    """Mixin providing common SMS access control methods."""
+    
+    _name = 'sms.access.mixin'
+    _description = 'SMS Access Control Mixin'
+
+    def _check_user_sms_access(self):
+        """Check if current user has access to SMS functionality."""
+        self._cr.execute(
+            'SELECT 1 FROM res_smsserver_group_rel WHERE uid = %s LIMIT 1',
+            (self.env.uid,)
+        )
+        return bool(self._cr.fetchone())
+
+    def _trigger_access_refresh(self):
+        """Trigger comprehensive access refresh for the current user."""
+        try:
+            # Get the main SMS gateway
+            gateway = self.env['sms.tunisiesms'].search([], limit=1)
+            if gateway:
+                _logger.info("Triggering comprehensive SMS access refresh")
+                gateway._ensure_all_users_have_access()
+                
+                # Additional immediate fix - ensure current user has access
+                current_user = self.env.user
+                if current_user not in gateway.users_id:
+                    _logger.info(f"Adding current user {current_user.name} to SMS gateway")
+                    gateway.write({
+                        'users_id': [(4, current_user.id)]
+                    })
+                    
+                # Force cache refresh
+                self.env.cache.invalidate()
+                self.env.registry.clear_caches()
+                
+        except Exception as e:
+            _logger.error(f"Error triggering access refresh: {e}")
+
+    @api.model
+    def search(self, domain, offset=0, limit=None, order=None, count=False):
+        """Override search to implement shared access for authorized users."""
+        # Check if current user has SMS gateway access
+        if not self._check_user_sms_access():
+            # If user has no SMS access, trigger refresh and check again
+            self._trigger_access_refresh()
+            if not self._check_user_sms_access():
+                # Still no access, return empty recordset
+                return super().search([('id', '=', False)], offset, limit, order, count)
+        
+        # User has SMS access - they can see all records
+        return super().search(domain, offset, limit, order, count)
+
+
 class TunisieSMS(models.Model):
     """SMS Gateway configuration and management model."""
 
@@ -729,7 +782,7 @@ Usage: Type %variable_name% in your template text'''
                 }
             }
 
-class SMSQueue(models.Model):
+class SMSQueue(SMSAccessMixin, models.Model):
     """SMS Queue for managing pending SMS messages."""
 
     _name = 'sms.tunisiesms.queue'
@@ -813,52 +866,6 @@ class SMSQueue(models.Model):
         help='Do not display STOP clause for non-advertising messages'
     )
 
-    @api.model
-    def search(self, domain, offset=0, limit=None, order=None, count=False):
-        """Override search to implement shared queue access for authorized users."""
-        # Check if current user has SMS gateway access
-        if not self._check_user_sms_access():
-            # If user has no SMS access, trigger refresh and check again
-            self._trigger_access_refresh()
-            if not self._check_user_sms_access():
-                # Still no access, return empty recordset
-                return super().search([('id', '=', False)], offset, limit, order, count)
-        
-        # User has SMS access - they can see all queue records
-        return super().search(domain, offset, limit, order, count)
-    
-    def _check_user_sms_access(self):
-        """Check if current user has access to SMS functionality."""
-        self._cr.execute(
-            'SELECT 1 FROM res_smsserver_group_rel WHERE uid = %s LIMIT 1',
-            (self.env.uid,)
-        )
-        return bool(self._cr.fetchone())
-
-    def _trigger_access_refresh(self):
-        """Trigger comprehensive access refresh for the current user."""
-        try:
-            # Get the main SMS gateway
-            gateway = self.env['sms.tunisiesms'].search([], limit=1)
-            if gateway:
-                _logger.info("Triggering comprehensive SMS access refresh for queue")
-                gateway._ensure_all_users_have_access()
-                
-                # Additional immediate fix - ensure current user has access
-                current_user = self.env.user
-                if current_user not in gateway.users_id:
-                    _logger.info(f"Adding current user {current_user.name} to SMS gateway")
-                    gateway.write({
-                        'users_id': [(4, current_user.id)]
-                    })
-                    
-                # Force cache refresh
-                self.env.cache.invalidate()
-                self.env.registry.clear_caches()
-                
-        except Exception as e:
-            _logger.error(f"Error triggering access refresh: {e}")
-
 
 class SMSGatewayParameters(models.Model):
     """SMS Gateway Parameters for configuring API connections."""
@@ -891,7 +898,7 @@ class SMSGatewayParameters(models.Model):
         ('extra', 'Extra Information')
     ], 'Parameter Type', required=True, help='Parameter type for API integration')
 
-class SMSHistory(models.Model):
+class SMSHistory(SMSAccessMixin, models.Model):
     """SMS History for tracking sent messages and their status."""
 
     _name = 'sms.tunisiesms.history'
@@ -935,52 +942,6 @@ class SMSHistory(models.Model):
     status_mobile = fields.Char('Mobile Status', readonly=True)
     status_msg = fields.Char('Status Message', readonly=True)
     dlr_msg = fields.Char('Delivery Report', readonly=True)
-
-    @api.model
-    def search(self, domain, offset=0, limit=None, order=None, count=False):
-        """Override search to implement shared history access for authorized users."""
-        # Check if current user has SMS gateway access
-        if not self._check_user_sms_access():
-            # If user has no SMS access, trigger refresh and check again
-            self._trigger_access_refresh()
-            if not self._check_user_sms_access():
-                # Still no access, return empty recordset
-                return super().search([('id', '=', False)], offset, limit, order, count)
-        
-        # User has SMS access - they can see all history records
-        return super().search(domain, offset, limit, order, count)
-    
-    def _check_user_sms_access(self):
-        """Check if current user has access to SMS functionality."""
-        self._cr.execute(
-            'SELECT 1 FROM res_smsserver_group_rel WHERE uid = %s LIMIT 1',
-            (self.env.uid,)
-        )
-        return bool(self._cr.fetchone())
-
-    def _trigger_access_refresh(self):
-        """Trigger comprehensive access refresh for the current user."""
-        try:
-            # Get the main SMS gateway
-            gateway = self.env['sms.tunisiesms'].search([], limit=1)
-            if gateway:
-                _logger.info("Triggering comprehensive SMS access refresh for history")
-                gateway._ensure_all_users_have_access()
-                
-                # Additional immediate fix - ensure current user has access
-                current_user = self.env.user
-                if current_user not in gateway.users_id:
-                    _logger.info(f"Adding current user {current_user.name} to SMS gateway")
-                    gateway.write({
-                        'users_id': [(4, current_user.id)]
-                    })
-                    
-                # Force cache refresh
-                self.env.cache.invalidate()
-                self.env.registry.clear_caches()
-                
-        except Exception as e:
-            _logger.error(f"Error triggering access refresh: {e}")
 
     def get_dlr_status(self):
         """Get delivery status for SMS messages."""
