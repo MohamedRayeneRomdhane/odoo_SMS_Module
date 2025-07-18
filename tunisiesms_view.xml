@@ -11,6 +11,10 @@
             <field name="priority" eval="8"/>
             <field name="arch" type="xml">
                 <form string="SMS Gateway" >
+                    <header>
+                        <button name="action_refresh_user_access" string="Refresh User Access" type="object" class="oe_highlight"/>
+                        <button name="create_test_sms_records" string="Create Test SMS Records" type="object" class="oe_highlight"/>
+                    </header>
                     <sheet>
                         <group>
 

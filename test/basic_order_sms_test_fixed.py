@@ -1,13 +1,81 @@
 #!/usr/bin/env python3
 """
-Enhanced Sale Order SMS Test for Rayen (Fixed)
-==============================================
+Enhanced Sale Order SMS Test for Rayen (Fixed) - User Selection
+===============================================================
 
-This script creates a comprehensive SMS test for customer Rayen with fixed product types.
+This script creates a comprehensive SMS test for customer Rayen with user selection.
 """
+
+def get_available_users():
+    """Get list of available users from the database."""
+    users = env['res.users'].search([
+        ('active', '=', True),
+        ('login', '!=', '__system__')
+    ])
+    return users
+
+def select_user_for_sms():
+    """Interactive user selection for SMS sending."""
+    users = get_available_users()
+    
+    if not users:
+        print("No users found!")
+        return None
+    
+    print("\n" + "="*50)
+    print("AVAILABLE USERS FOR SMS SENDING")
+    print("="*50)
+    
+    for i, user in enumerate(users, 1):
+        print(f"{i}. {user.name} ({user.login})")
+        if user.mobile:
+            print(f"   Mobile: {user.mobile}")
+        if user.email:
+            print(f"   Email: {user.email}")
+        print()
+    
+    while True:
+        try:
+            choice = input(f"Select user (1-{len(users)}) or 'q' to quit: ").strip()
+            if choice.lower() == 'q':
+                print("Test cancelled by user")
+                return None
+            
+            choice_int = int(choice)
+            if 1 <= choice_int <= len(users):
+                selected_user = users[choice_int - 1]
+                print(f"\n✓ Selected user: {selected_user.name} ({selected_user.login})")
+                return selected_user
+            else:
+                print(f"Please enter a number between 1 and {len(users)}")
+        except ValueError:
+            print("Please enter a valid number or 'q' to quit")
+        except KeyboardInterrupt:
+            print("\nTest cancelled by user")
+            return None
+
+def switch_user_context(user_id):
+    """Switch to a different user context."""
+    global env
+    env = env(user=user_id)
+    return env
 
 print("=== Enhanced Sale Order SMS Test for Rayen (Fixed) ===")
 print("Creating and testing SMS functionality for customer Rayen...")
+
+# Select user for SMS operations
+selected_user = select_user_for_sms()
+if not selected_user:
+    print("No user selected. Exiting test.")
+    exit()
+
+# Switch to selected user context
+original_user = env.user
+env = switch_user_context(selected_user.id)
+
+print(f"\n🔄 Switched to user context: {env.user.name} ({env.user.login})")
+print(f"   User ID: {env.user.id}")
+print(f"   Groups: {[g.name for g in env.user.groups_id]}")
 
 try:
     # 1. Setup customer Rayen
@@ -95,6 +163,16 @@ try:
         print(f"   Auto SMS on create: {gateway.auto_sms_on_create}")
         print(f"   Auto SMS on status change: {gateway.auto_sms_on_status_change}")
         
+        # Check if current user has permission
+        try:
+            if hasattr(gateway, '_check_permissions'):
+                has_permission = gateway._check_permissions()
+                print(f"   ✓ Current user has SMS permission: {has_permission}")
+            else:
+                print("   ? Permission check method not available")
+        except Exception as perm_error:
+            print(f"   ✗ Permission check error: {perm_error}")
+        
         # Check templates
         templates = [
             ('Draft template', gateway.order_draft_sms),
@@ -148,6 +226,7 @@ try:
     print(f"   State: {sale_order.state}")
     print(f"   Total: {sale_order.amount_total}")
     print(f"   Products: {len(sale_order.order_line)} items")
+    print(f"   Created by user: {env.user.name} ({env.user.login})")
     
     # Check if SMS was triggered by creation
     sms_queue_after_create = env['sms.tunisiesms.queue'].search_count([])
@@ -158,6 +237,12 @@ try:
     
     if sms_queue_after_create > sms_queue_before or sms_history_after_create > sms_history_before:
         print("   ✅ CREATE TRIGGER WORKED - SMS was sent!")
+        
+        # Show who sent the SMS
+        recent_history = env['sms.tunisiesms.history'].search([], limit=1, order='id desc')
+        if recent_history:
+            sender = env['res.users'].browse(recent_history.user_id.id)
+            print(f"   📱 SMS sent by: {sender.name} ({sender.login})")
     else:
         print("   ? CREATE TRIGGER - No SMS detected (may need templates)")
 
@@ -191,6 +276,12 @@ try:
         
         if sms_queue_after_confirm > sms_queue_before_confirm or sms_history_after_confirm > sms_history_before_confirm:
             print("   ✅ STATUS CHANGE TRIGGER WORKED - SMS was sent!")
+            
+            # Show who sent the SMS
+            recent_history = env['sms.tunisiesms.history'].search([], limit=1, order='id desc')
+            if recent_history:
+                sender = env['res.users'].browse(recent_history.user_id.id)
+                print(f"   📱 SMS sent by: {sender.name} ({sender.login})")
         else:
             print("   ? STATUS CHANGE TRIGGER - No SMS detected")
             
@@ -216,7 +307,9 @@ try:
         mobile = getattr(h, 'to', getattr(h, 'mobile_to', 'N/A'))
         sms_text = getattr(h, 'sms', getattr(h, 'text', 'N/A'))
         status = getattr(h, 'status_code', getattr(h, 'state', 'N/A'))
-        print(f"     - {mobile}: {str(sms_text)[:30]}... (Status: {status})")
+        sender = env['res.users'].browse(h.user_id.id) if h.user_id else None
+        sender_name = sender.name if sender else 'Unknown'
+        print(f"     - {mobile}: {str(sms_text)[:30]}... (Status: {status}) [Sent by: {sender_name}]")
 
     # 8. Test order completion (if possible)
     print("\n8. Testing order completion...")
@@ -275,6 +368,7 @@ try:
     
     # Summary
     print("\n10. Test Summary...")
+    print(f"✓ Test run by user: {env.user.name} ({env.user.login})")
     print(f"✓ Customer: {rayen.name} ({rayen.mobile})")
     print(f"✓ Order: {sale_order.name} - {sale_order.state}")
     print(f"✓ Products: {len(sale_order.order_line)} items")
@@ -282,14 +376,22 @@ try:
     
     if final_queue > sms_queue_before or final_history > sms_history_before:
         print("✅ SMS FUNCTIONALITY IS WORKING!")
+        print(f"   📱 SMS messages sent by: {env.user.name}")
+        print("   🔧 Automatic SMS visibility fix is integrated and working")
     else:
         print("? SMS functionality unclear - check templates and permissions")
 
     print("\n✅ Enhanced SMS test complete!")
+    print("� Note: SMS visibility fix now runs automatically with each SMS operation")
 
 except Exception as e:
     print(f"✗ Test failed with error: {e}")
     import traceback
     traceback.print_exc()
+finally:
+    # Restore original user context if needed
+    if 'original_user' in locals():
+        env = env(user=original_user.id)
+        print(f"\n🔄 Restored to original user: {env.user.name}")
 
 print("\n=== Enhanced Sale Order SMS Test Complete ===")

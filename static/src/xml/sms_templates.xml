@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="sms_refresh_notification">
+        <div class="alert alert-info">
+            <strong>SMS Access Refreshed!</strong> 
+            Please refresh your browser to see the updated SMS history and queue.
+        </div>
+    </t>
+</templates>

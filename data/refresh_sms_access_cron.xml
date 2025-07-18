@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Cron job to refresh SMS access for all users -->
+        <record id="refresh_sms_access_cron" model="ir.cron">
+            <field name="name">Refresh SMS Access for All Users</field>
+            <field name="model_id" ref="model_sms_tunisiesms"/>
+            <field name="state">code</field>
+            <field name="code">
+# Refresh SMS access for all users
+model.refresh_user_access()
+            </field>
+            <field name="interval_number">5</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>

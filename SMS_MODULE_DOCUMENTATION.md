@@ -1,36 +1,73 @@
-# 📱 Odoo SMS Module - Complete Testing Documentation
+# 📱 Odoo SMS Module - Complete Documentation
 
 ## Table of Contents
 - [Overview](#overview)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Detailed Testing Process](#detailed-testing-process)
-- [Troubleshooting Guide](#troubleshooting-guide)
-- [Success Criteria](#success-criteria)
+- [Module Architecture](#module-architecture)
+- [Installation & Setup](#installation--setup)
+- [Configuration](#configuration)
+- [Features](#features)
+- [Testing Framework](#testing-framework)
+- [API Reference](#api-reference)
+- [Troubleshooting](#troubleshooting)
 - [Appendix](#appendix)
 
 ---
 
 ## Overview
 
-This documentation provides a comprehensive guide for testing the Odoo SMS Module that integrates with TUNISIESMS gateway. The module enables automatic SMS notifications for sale orders and manual SMS sending functionality.
+This documentation provides a comprehensive guide for the Odoo SMS Module that integrates with TUNISIESMS gateway. The module enables automatic SMS notifications for sale orders, manual SMS sending, and comprehensive SMS management with built-in visibility fixes and robust permission management.
 
-### Key Features Tested
-- **Permission Management**: SMS server permission validation and fixing
-- **Order Integration**: Automatic SMS on sale order confirmation
-- **Manual SMS**: Direct SMS sending capability
-- **Queue Management**: SMS queue and history tracking
-- **Gateway Integration**: TUNISIESMS API communication
+### Key Features
+- **Automatic SMS Notifications**: Send SMS automatically on sale order status changes
+- **Manual SMS Sending**: Direct SMS sending capability with template support
+- **Mass SMS Campaigns**: Bulk SMS to customer groups and categories
+- **Permission Management**: Comprehensive SMS server permission validation and automatic fixing
+- **Queue Management**: Reliable SMS queue processing and delivery tracking
+- **History Tracking**: Complete audit trail of all SMS communications
+- **Template System**: Customizable SMS templates with dynamic field substitution
+- **Test Framework**: Organized test suite for comprehensive module validation
 
 ---
 
-## Prerequisites
+## Module Architecture
 
-### Environment Requirements
-- **Docker Environment**: Odoo 14 running in Docker containers
-- **Database**: PostgreSQL with test database named "test"
-- **SMS Gateway**: TUNISIESMS account with valid credentials
-- **Network**: Internet connectivity for SMS gateway API calls
+### Core Components
+
+#### 1. SMS Gateway Integration (`tunisiesms.py`)
+- **TunisieSMS Model**: Core SMS gateway configuration and management
+- **HTTP/SMPP Support**: Multiple API integration methods
+- **Automatic Visibility Fix**: Integrated fix_visibility.py functionality
+- **Recursion Prevention**: Context-based safety mechanisms
+- **Error Handling**: Comprehensive error management and logging
+
+#### 2. Permission Management
+- **Automatic User Access**: All users automatically granted SMS access
+- **Shared History**: Unified SMS history visible to all authorized users
+- **Database Permissions**: Proper access control via `res_smsserver_group_rel`
+- **Cache Management**: Odoo 14 compatible cache invalidation
+
+#### 3. Order Integration (`SaleOrderSMS`)
+- **Status-based Triggers**: SMS on order state changes
+- **Template Processing**: Dynamic field replacement in SMS content
+- **Automatic Execution**: Background SMS processing
+- **Error Recovery**: Robust error handling and status tracking
+
+#### 4. Test Framework (`test/` directory)
+- **Organized Structure**: All tests in dedicated directory
+- **Comprehensive Coverage**: Tests for all module components
+- **Automated Testing**: Test runner with reporting capabilities
+- **Easy Loading**: Scripts for Docker container integration
+
+---
+
+## Installation & Setup
+
+### Prerequisites
+- **Odoo 14.0**: Compatible with Odoo Community Edition 14.0
+- **PostgreSQL**: Database backend (11+ recommended)
+- **Python 3.6+**: Required for Odoo runtime
+- **Docker & Docker Compose**: For containerized deployment
+- **TUNISIESMS Account**: Active SMS gateway account with API access
 
 ### Container Setup
 ```bash
@@ -42,9 +79,114 @@ docker ps
 # sms-db-1      (PostgreSQL database)
 ```
 
-### Required Files
-- `fix_sms_permissions_corrected.py` - Permission fix script
-- `basic_order_sms_test.py` - Enhanced SMS testing script
+### Module Installation
+1. Clone the repository into your Odoo addons directory
+2. Update your addons path to include the module location
+3. Install the module from Apps menu
+4. The module automatically configures SMS permissions for all users
+
+### Directory Structure
+```
+odoo_SMS_Module/
+├── test/                            # Test framework
+│   ├── test_runner.py              # Comprehensive test runner
+│   ├── load_test_files.sh          # Test loading scripts
+│   └── [test files]                # All test files
+├── tunisiesms.py                   # Core SMS module
+├── wizard/                         # SMS wizards
+├── data/                           # Configuration data
+├── security/                       # Access control
+└── static/                         # Web assets
+```
+
+---
+
+## Configuration
+
+### SMS Gateway Setup
+1. **Navigate to Settings → SMS → SMS Gateway**
+2. **Configure TUNISIESMS credentials:**
+   - Gateway URL: `https://api.l2t.io/tn/v0/api/api.aspx`
+   - Username: Your TUNISIESMS username
+   - Password: Your TUNISIESMS password
+   - API Key: Your TUNISIESMS API key
+
+### Automatic SMS Configuration
+1. **Enable Automatic SMS System**: Master switch for all automatic triggers
+2. **Configure Order Templates**: Set SMS templates for different order states
+3. **Set Trigger Conditions**: Enable/disable specific order state triggers
+4. **Partner Notification**: Configure admin notifications for new contacts
+
+### Permission Management
+- **Automatic Setup**: All users automatically granted SMS access on module install
+- **Shared Access**: SMS history visible to all authorized users
+- **Manual Refresh**: Use "Refresh User Access" button if needed
+- **Database Integrity**: Automatic permission validation and fixing
+
+---
+
+## Features
+
+### 1. Automatic SMS Notifications
+
+#### Order Status SMS
+- **Draft Orders**: Welcome message when order is created
+- **Quotation Sent**: Confirmation when quotation is sent to customer
+- **Order Confirmed**: Notification when order is confirmed (sale state)
+- **Order Completed**: Delivery confirmation when order is done
+- **Order Cancelled**: Cancellation notification
+
+#### Template Variables
+Common variables available in SMS templates:
+- `%name%` - Order number (e.g., SO001)
+- `%partner_id%` - Customer name
+- `%state%` - Order status
+- `%amount_total%` - Total order amount
+- `%date_order%` - Order date
+- `%user_id%` - Salesperson name
+- `%mobile%` - Customer mobile number
+
+### 2. Manual SMS Sending
+
+#### Single SMS
+- Send individual SMS to specific customers
+- Template support with variable substitution
+- Real-time delivery confirmation
+- History tracking
+
+#### Mass SMS
+- Send bulk SMS to customer groups
+- Category-based targeting
+- Progress tracking
+- Delivery reports
+
+### 3. Queue Management
+
+#### SMS Queue Processing
+- **Automatic Processing**: Background cron jobs process SMS queue
+- **Error Handling**: Failed messages marked with error status
+- **Retry Logic**: Automatic retry for failed messages
+- **Status Tracking**: Real-time status updates
+
+#### Delivery Tracking
+- **Message IDs**: Unique tracking for each SMS
+- **Delivery Reports**: DLR (Delivery Report) processing
+- **Status Updates**: Real-time delivery status updates
+- **History Logging**: Complete audit trail
+
+### 4. Permission System
+
+#### Automatic Visibility Fix
+- **Integrated Fix**: Built-in fix_visibility.py functionality
+- **Automatic Execution**: Runs automatically when needed
+- **Context Safety**: Recursion prevention mechanisms
+- **Error Recovery**: Robust error handling
+
+#### Access Control
+- **Shared Access**: All users see shared SMS history
+- **Permission Validation**: Automatic permission checking
+- **Database Security**: Proper access control implementation
+- **Cache Management**: Odoo 14 compatible cache handling
 
 ---
 
@@ -55,58 +197,116 @@ docker ps
 docker exec -it sms-odoo-1 odoo shell -d test
 ```
 
-### 2. Fix SMS Permissions
-```python
-exec(open('/tmp/fix_sms_permissions_corrected.py').read())
-```
-
-### 3. Run SMS Tests
-```python
-exec(open('/tmp/enhanced_rayen_sms_test.py').read())
-```
-
-### 4. Verify Success
-- ✅ No permission errors
-- ✅ SMS sending returns `Result: True`
-- ✅ SMS queue shows new entries
-
 ---
 
-## Detailed Testing Process
+## Testing Framework
 
-### Phase 1: Environment Preparation
+### Overview
+The module includes a comprehensive testing framework located in the `test/` directory. This framework provides organized test suites, automated test runners, and easy integration with Docker containers.
 
-#### Step 1.1: Container Verification
-```bash
-# Check container status
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+### Test Directory Structure
+```
+test/
+├── __init__.py                      # Python package initialization
+├── README.md                        # Test documentation
+├── test_runner.py                   # Comprehensive test runner
+├── load_test_files.sh              # Bash loading script
+├── load_test_files.bat             # Windows loading script
+├── basic_order_sms_test_fixed.py   # Basic order SMS tests
+├── test_automatic_refresh.py       # Automatic refresh tests
+├── test_database_access.py         # Database access tests
+├── test_shared_access.py           # Shared access tests
+├── test_shared_access_final.py     # Final shared access tests
+├── test_view_refresh.py            # View refresh tests
+├── trigger_test.py                 # Trigger tests
+├── create_test_sms.py              # Test SMS creation utility
+└── final_test.py                   # Final comprehensive tests
 ```
 
-**Expected Output:**
+### Test Categories
+
+#### 1. Basic Functionality Tests
+- **Order SMS Tests**: Test automatic SMS sending on order status changes
+- **Template Tests**: Verify template variable replacement
+- **History Tests**: Validate SMS history creation and visibility
+
+#### 2. Access Control Tests
+- **Permission Tests**: Validate user access to SMS functionality
+- **Shared Access Tests**: Test shared SMS history functionality
+- **Database Tests**: Verify proper database permissions
+
+#### 3. View Refresh Tests
+- **Automatic Refresh**: Test automatic view refresh mechanisms
+- **Cache Tests**: Validate cache invalidation
+- **Real-time Updates**: Test live view updates
+
+#### 4. Integration Tests
+- **Module Integration**: Test complete module functionality
+- **Error Handling**: Validate error recovery mechanisms
+- **Performance Tests**: Test under various load conditions
+
+### Running Tests
+
+#### Quick Start
+1. **Load tests to container:**
+   ```bash
+   cd test
+   ./load_test_files.sh    # Linux/Mac
+   # or
+   load_test_files.bat     # Windows
+   ```
+
+2. **Access Odoo shell:**
+   ```bash
+   docker exec -it sms-odoo-1 odoo shell -d odoo
+   ```
+
+3. **Run comprehensive test suite:**
+   ```python
+   exec(open('/tmp/test_runner.py').read())
+   run_test_suite()
+   ```
+
+#### Advanced Testing
+
+##### Run Specific Tests
+```python
+# Run specific test file
+run_specific_test('test_database_access.py')
+
+# List available tests
+list_available_tests()
 ```
-NAMES         STATUS        PORTS
-sms-odoo-1    Up X minutes  0.0.0.0:8060->8069/tcp
-sms-db-1      Up X minutes  5432/tcp
+
+##### Individual Test Files
+```python
+# Database access test
+exec(open('/tmp/test_database_access.py').read())
+
+# Shared access test
+exec(open('/tmp/test_shared_access_final.py').read())
+
+# Basic order SMS test
+exec(open('/tmp/basic_order_sms_test_fixed.py').read())
 ```
 
-#### Step 1.2: File Deployment
-```bash
-# Copy permission fix script
-docker cp "c:\path\to\fix_sms_permissions_corrected.py" sms-odoo-1:/tmp/
+### Test Results Analysis
 
-# Copy SMS test script  
-docker cp "c:\path\to\basic_order_sms_test.py" sms-odoo-1:/tmp/enhanced_rayen_sms_test.py
+#### Success Criteria
+- ✅ All tests pass without errors
+- ✅ SMS sending returns `Result: True`
+- ✅ SMS queue shows new entries
+- ✅ History records are created and visible
+- ✅ No permission errors occur
+- ✅ Automatic visibility fixes work correctly
 
-# Verify files copied
-docker exec sms-odoo-1 ls -la /tmp/*.py
-```
+#### Common Issues and Solutions
+1. **Permission Errors**: Automatic visibility fix resolves most permission issues
+2. **Empty History**: Test the shared access functionality
+3. **SMS Send Failures**: Check gateway configuration and credentials
+4. **View Refresh Issues**: Run view refresh tests
 
-### Phase 2: Permission Management
-
-#### Step 2.1: Access Odoo Shell
-```bash
-docker exec -it sms-odoo-1 odoo shell -d test
-```
+---
 
 **Expected Shell Prompt:**
 ```
@@ -448,31 +648,29 @@ Key Fields:
 # Remove all Python test files from container
 docker exec --user root sms-odoo-1 sh -c "rm -f /tmp/*.py"
 
-# Verify cleanup
-docker exec sms-odoo-1 ls -la /tmp/
-```
+## Appendix
 
-#### Reset Test Environment
-```python
-# Delete test orders (optional)
-test_orders = env['sale.order'].search([('partner_id.name', 'ilike', 'rayen')])
-test_orders.unlink()
+### Module Information
+- **Module Name**: Odoo SMS Module
+- **Version**: 14.0.0.0 
+- **Last Updated**: July 18, 2025
+- **Odoo Compatibility**: 14.0
+- **SMS Gateway**: TUNISIESMS Integration
+- **Test Framework**: Comprehensive test suite included
 
-# Clear SMS queue (optional)
-test_sms = env['sms.tunisiesms.queue'].search([('mobile', '=', '21621365818')])
-test_sms.unlink()
-```
+### Key Improvements
+- **Automatic Visibility Fix**: Integrated fix_visibility.py functionality
+- **Recursion Prevention**: Context-based safety mechanisms
+- **Organized Testing**: All tests moved to dedicated test/ directory
+- **Comprehensive Documentation**: Updated for current module state
+- **Enhanced Error Handling**: Robust error recovery mechanisms
 
----
-
-## Support Information
-
-### Documentation Version
-- **Version**: 1.0
-- **Last Updated**: July 14, 2025
-- **Odoo Version**: 14.0
-- **SMS Module**: TUNISIESMS Integration
+### Repository Information
+- **Repository**: odoo_SMS_Module
+- **Owner**: MohamedRayeneRomdhane
+- **Branch**: main
+- **Test Directory**: `/test/` with organized test suite
 
 ---
 
-*This documentation is maintained as part of the Odoo SMS Module project. Please ensure you're using the latest version of both the module and this documentation.*
+*This documentation reflects the current state of the Odoo SMS Module with all recent improvements and the organized test framework.*
