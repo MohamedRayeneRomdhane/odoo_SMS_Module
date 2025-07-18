@@ -798,7 +798,7 @@ This project is licensed under the LGPL-3.0 License - see the LICENSE file for d
 
 ##  Version History
 
-### v1.0.0 (Current)
+### v1.2.0 (Current)
 - ✅ TUNISIESMS gateway integration
 - ✅ Single and mass SMS functionality  
 - ✅ Order SMS automation
