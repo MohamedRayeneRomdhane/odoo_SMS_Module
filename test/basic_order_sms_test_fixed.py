@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Enhanced Sale Order SMS Test for Rayen (Fixed) - User Selection
-===============================================================
+Enhanced Sale Order SMS Test - User Selection
+==============================================
 
-This script creates a comprehensive SMS test for customer Rayen with user selection.
+This script creates a comprehensive SMS test for a test customer with user selection.
 """
 
 def get_available_users():
@@ -60,8 +60,8 @@ def switch_user_context(user_id):
     env = env(user=user_id)
     return env
 
-print("=== Enhanced Sale Order SMS Test for Rayen (Fixed) ===")
-print("Creating and testing SMS functionality for customer Rayen...")
+print("=== Enhanced Sale Order SMS Test ===")
+print("Creating and testing SMS functionality for test customer...")
 
 # Select user for SMS operations
 selected_user = select_user_for_sms()
@@ -78,26 +78,26 @@ print(f"   User ID: {env.user.id}")
 print(f"   Groups: {[g.name for g in env.user.groups_id]}")
 
 try:
-    # 1. Setup customer Rayen
-    print("\n1. Setting up customer Rayen...")
-    rayen = env['res.partner'].search([('name', 'ilike', 'rayen')], limit=1)
-    if rayen:
-        print(f"✓ Found existing customer: {rayen.name}")
-        print(f"   Customer: {rayen.name}")
-        print(f"   Mobile: {rayen.mobile}")
-        print(f"   Email: {rayen.email}")
-        print(f"   City: {rayen.city}")
+    # 1. Setup test customer
+    print("\n1. Setting up test customer...")
+    test_customer = env['res.partner'].search([('name', 'ilike', 'test customer')], limit=1)
+    if test_customer:
+        print(f"✓ Found existing customer: {test_customer.name}")
+        print(f"   Customer: {test_customer.name}")
+        print(f"   Mobile: {test_customer.mobile}")
+        print(f"   Email: {test_customer.email}")
+        print(f"   City: {test_customer.city}")
     else:
-        print("✗ Customer Rayen not found")
-        rayen = env['res.partner'].create({
-            'name': 'Rayen',
-            'mobile': '21621365818',
-            'email': 'rayen@example.com',
+        print("✗ Test customer not found")
+        test_customer = env['res.partner'].create({
+            'name': 'Test Customer',
+            'mobile': '21612345678',
+            'email': 'test@example.com',
             'city': 'Tunis',
             'is_company': False,
             'customer_rank': 1,
         })
-        print(f"✓ Created customer: {rayen.name}")
+        print(f"✓ Created customer: {test_customer.name}")
 
     # 2. Setup test products with correct types for Odoo v14
     print("\n2. Setting up test products...")
@@ -200,7 +200,7 @@ try:
     
     # Create sale order with multiple products
     sale_order = env['sale.order'].create({
-        'partner_id': rayen.id,
+        'partner_id': test_customer.id,
         'order_line': [
             (0, 0, {
                 'product_id': smartphone.id,
@@ -369,7 +369,7 @@ try:
     # Summary
     print("\n10. Test Summary...")
     print(f"✓ Test run by user: {env.user.name} ({env.user.login})")
-    print(f"✓ Customer: {rayen.name} ({rayen.mobile})")
+    print(f"✓ Customer: {test_customer.name} ({test_customer.mobile})")
     print(f"✓ Order: {sale_order.name} - {sale_order.state}")
     print(f"✓ Products: {len(sale_order.order_line)} items")
     print(f"✓ Total: {sale_order.amount_total}")

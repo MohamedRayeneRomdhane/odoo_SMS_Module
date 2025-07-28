@@ -13,10 +13,11 @@ try:
     
     # Database connection parameters
     conn = psycopg2.connect(
-        host='db',
-        database='test',
-        user='odoo',
-        password='odoo'
+        host='localhost',
+        port=5432,
+        database='your_database',
+        user='your_db_user',
+        password='your_db_password'
     )
     
     cursor = conn.cursor()

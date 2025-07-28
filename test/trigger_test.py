@@ -86,7 +86,7 @@ try:
     if not test_partner:
         test_partner = env['res.partner'].create({
             'name': 'Test SMS Customer',
-            'mobile': '21621365818',
+            'mobile': '21612345678',
             'is_company': False,
             'customer_rank': 1
         })
@@ -195,8 +195,8 @@ try:
         
         # Create new partner
         new_partner = env['res.partner'].create({
-            'name': f'SMS Test Partner {env.cr.dbname}',
-            'mobile': '21621365999',
+            'name': f'SMS Test Partner',
+            'mobile': '21612345999',
             'is_company': False,
             'customer_rank': 1
         })

@@ -27,14 +27,7 @@
         "data/send_sms_queue_cron.xml",
         "data/order_to_sms_queue_cron.xml",
         "data/get_dlr_status_cron.xml",
-        "data/partner_to_sms_queue_cron.xml",
-        "data/refresh_sms_access_cron.xml"
-    ],
-    "qweb": [
-        "static/src/xml/sms_templates.xml",
-    ],
-    "js": [
-        "static/src/js/sms_refresh.js",
+        "data/partner_to_sms_queue_cron.xml"
     ],
     "active": False,
     "installable": True,

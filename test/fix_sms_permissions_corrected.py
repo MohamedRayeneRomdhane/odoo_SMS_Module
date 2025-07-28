@@ -91,12 +91,12 @@ try:
                 
                 # Test actual SMS sending
                 print(f"\n🧪 Testing actual SMS sending...")
-                rayen = env['res.partner'].search([('name', 'ilike', 'rayen')], limit=1)
-                if rayen and rayen.mobile:
+                test_customer = env['res.partner'].search([('name', 'ilike', 'test customer')], limit=1)
+                if test_customer and test_customer.mobile:
                     try:
                         sms_data = type('SMSData', (), {
                             'gateway': gateway,
-                            'mobile_to': rayen.mobile,
+                            'mobile_to': test_customer.mobile,
                             'text': f'Permission test successful! From {current_user.name}',
                             'validity': 60,
                             'classes1': '1',
@@ -111,7 +111,7 @@ try:
                     except Exception as sms_error:
                         print(f"❌ SMS sending failed: {sms_error}")
                 else:
-                    print("No customer Rayen found for SMS test")
+                    print("No test customer found for SMS test")
             else:
                 print("❌ SMS gateway permission check still FAILED")
         else:

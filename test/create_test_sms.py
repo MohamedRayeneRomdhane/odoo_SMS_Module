@@ -23,7 +23,7 @@ try:
         'to': '+216123456789',
         'message_id': 'test_123',
         'status_code': '200',
-        'status_mobile': '+216123456789',
+        'status_mobile': '+21612345678',
         'status_msg': 'Test message sent successfully',
         'date_create': fields.Datetime.now(),
         'user_id': env.uid
